@@ -9,13 +9,15 @@ typedef enum {
 	false, true
 } bool;
 
-typedef struct {
+struct HeaderStruct {
 	size_t size;
 	bool is_free;
-	struct Node *next;
-} Header;
+	struct HeaderStruct *next;
+};
 
-static Header *MoreSpace(size_t size) {
+typedef struct HeaderStruct Header;
+
+Header *MoreSpace(size_t size) {
 	Header *new_header;
 
 	// Move the Program Break up by 64k bytes, plus the size of Header.
@@ -44,6 +46,30 @@ static Header *MoreSpace(size_t size) {
  */
 static Header *free_list_head = NULL;
 
+/**
+ * Attempts to fetch an existing Header *.
+ */
+Header *FetchExistingHeader(void *ptr) {
+	Header *cursor = free_list_head;
+	void *blob_pointer;
+
+	// Traverse through the free list, looking for the correct blob data
+	while (cursor != NULL ) {
+		blob_pointer = cursor + sizeof(Header);
+
+		// Check if this Header * corresponds to the pointer we want.
+		if (ptr == blob_pointer) {
+			return cursor;
+		}
+
+		// Otherwise, keep iterating through the free list.
+		cursor = cursor->next;
+	}
+
+	// If we couldn't find the Header * for the given ptr, then return NULL.
+	return NULL ;
+}
+
 void *malloc(size_t size) {
 	puts("called Girum's version of malloc()");
 
@@ -62,25 +88,13 @@ void *malloc(size_t size) {
 void free(void *ptr) {
 	puts("called Girum's version of free()");
 
-	Header *cursor = free_list_head;
-	void *blob_pointer;
+	// Attempt to fetch the header for the given ptr.
+	Header *header = FetchExistingHeader(ptr);
 
-	// Traverse through the free list, looking for the correct
-	while (cursor != NULL ) {
-		blob_pointer = cursor + sizeof(Header);
-
-		// If we found the blob pointer, then mark the memory as "free" and
-		// return.
-		if (ptr == blob_pointer) {
-			cursor->is_free = true;
-			return;
-		}
-
-		// Otherwise, keep iterating through the free list.
-		cursor = cursor->next;
-	}
-
-	if (cursor == NULL ) {
+	if (header != NULL ) {
+		// If we found the memory, mark it off as "is_free".
+		header->is_free = true;
+	} else {
 		perror("couldn't free *ptr - either you called free(NULL) "
 				"or the memory couldn't be found in the free list");
 	}

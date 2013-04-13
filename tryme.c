@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	char *s;
 
 	// Should call malloc() implicitly.
-	s = strdup("Some string to strdup(). Should call malloc() implicitly.");
+	s = strdup("Test strdup()! should call malloc() implicitly...");
 
 	puts(s);
 	free(s);
