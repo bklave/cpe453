@@ -19,5 +19,6 @@ typedef enum {
 
 long GetDebugFlag();
 
+//void log(const char *);
 
 #endif

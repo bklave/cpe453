@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
 	char *s;
 
 	// Should call malloc() implicitly.
-	s = strdup("Tryme.c called. This should call malloc() implicitly...");
+	s = strdup("Tryme.c used. Calling malloc() implicitly...");
 
 	puts(s);
 	free(s);

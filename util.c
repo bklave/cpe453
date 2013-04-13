@@ -17,10 +17,10 @@ long GetDebugFlag() {
 	const char *debug_flag_string = getenv(kDebugFlag);
 
 	// If the string is there, cast it to a long.
-	if (debug_flag_string != NULL) {
+	if (debug_flag_string != NULL ) {
 		debug_flag = strtol(debug_flag_string, NULL, 10);
 	} else {
-		fprintf(stderr, "%s flag not set.", kDebugFlag);
+		fputs("\"DEBUG_MALLOC\" flag not set.", stderr);
 	}
 
 	return debug_flag;
