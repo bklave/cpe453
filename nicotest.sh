@@ -1,1 +1,1 @@
-~pn-cs453/demos/tryAsgn1
+./tryAsgn1

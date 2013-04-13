@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "freelist.h"
 
-static const int kBytesToReserve = 500;
+static const int kBytesToReserve = 64000;
 
 /**
  * The number of bytes that I have free in my data segment
@@ -26,11 +26,7 @@ static Header *free_list_head_node = NULL;
 void *IncreaseFreeListSize() {
 	// Move the Program Break up by 64k bytes.
 	void *previous_program_break = sbrk(kBytesToReserve);
-
-//	char message[100];
-//	snprintf(message, 100, "Allocating a region of size %i...",
-//			unallocated_bytes_in_data_segment);
-//	fputs(message, stdout);
+	long debug_flag = GetDebugFlag();
 
 	// Figure out how much we need to add to the address of the old
 	// program break to make it divisible by 16.
@@ -49,8 +45,6 @@ void *IncreaseFreeListSize() {
 		perror("sbrk(2) failed");
 		return NULL ;
 	}
-
-//	snprintf(message, 100, "ok.\n");
 
 	return previous_program_break;
 }

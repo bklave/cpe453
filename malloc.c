@@ -8,6 +8,14 @@
 void *malloc(size_t size) {
 	Header *header = NULL;
 	void *new_memory = NULL;
+	long debug_flag = GetDebugFlag();
+	char message[100];
+
+	// Sanity check: size should be a positive number
+	// FIXME: Why does putting this check stop Nico's tests cold?
+	if (size <= 0) {
+		return NULL;
+	}
 
 	// Try to free some existing memory.
 	if ((header = FindSomeAlreadyFreedMemoryFromFreeList(size)) != NULL ) {
@@ -28,6 +36,13 @@ void *malloc(size_t size) {
 //		fputs("\nERROR: memory address not divisible by 16!\n", stderr);
 	}
 
+	// Debug output
+	if (debug_flag > 0) {
+		snprintf(message, 100, "malloc(%lu) =>"
+				" (ptr=%p, size=%lu)", size, new_memory, size);
+		fputs(message, stderr);
+	}
+
 	return new_memory;
 }
 
@@ -45,6 +60,7 @@ void free(void *ptr) {
 
 void *calloc(size_t nmemb, size_t size) {
 	// TODO: Finish calloc().
+
 	return 0;
 }
 

@@ -20,7 +20,7 @@ long GetDebugFlag() {
 	if (debug_flag_string != NULL ) {
 		debug_flag = strtol(debug_flag_string, NULL, 10);
 	} else {
-		fputs("\"DEBUG_MALLOC\" flag not set.", stderr);
+//		fputs("\"DEBUG_MALLOC\" flag not set.", stderr);
 	}
 
 	return debug_flag;
