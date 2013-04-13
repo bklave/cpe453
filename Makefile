@@ -53,4 +53,5 @@ malloc64.o: malloc.c
 clean:
 	rm util.o freelist.o malloc.o malloc.a tryme.o tryme.out
 	rm -f malloc.o *~ TAGS
-	rm malloc32.o malloc64.o lib/libmalloc.so lib64/libmalloc.so
+	rm util32.o util64.o freelist32.o freelist64.o malloc32.o malloc64.o lib/libmalloc.so lib64/libmalloc.so
+	rm DETAILS DETAILS.bak

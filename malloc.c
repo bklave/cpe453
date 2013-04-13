@@ -6,8 +6,6 @@
 #include "freelist.h"
 
 void *malloc(size_t size) {
-	puts("--- malloc() called ---");
-
 	Header *header = NULL;
 	void *new_memory = NULL;
 
@@ -27,15 +25,13 @@ void *malloc(size_t size) {
 
 	// Sanity check: Memory addresses must be divisible by 16.
 	if ((((long) new_memory) % kSixteen) != 0) {
-		fputs("ERROR: memory address not divisible by 16!\n", stderr);
+//		fputs("\nERROR: memory address not divisible by 16!\n", stderr);
 	}
 
 	return new_memory;
 }
 
 void free(void *ptr) {
-	puts("--- free() called ---");
-
 	// Attempt to fetch the header for the given ptr.
 	Header *header = FindSpecificHeader(ptr);
 
@@ -43,20 +39,16 @@ void free(void *ptr) {
 		// If we found the memory, mark it off as "is_free".
 		header->is_free = true;
 	} else {
-		fputs("couldn't free(); *ptr not in free list!\n", stderr);
+//		fputs("couldn't free(); *ptr not in free list!\n", stderr);
 	}
 }
 
 void *calloc(size_t nmemb, size_t size) {
-	puts("--- calloc() called ---");
-
 	// TODO: Finish calloc().
 	return 0;
 }
 
 void *realloc(void *ptr, size_t size) {
-	puts("--- realloc() called ---");
-
 	if (ptr == NULL ) {
 		malloc(size);
 	}

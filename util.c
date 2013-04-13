@@ -25,3 +25,4 @@ long GetDebugFlag() {
 
 	return debug_flag;
 }
+

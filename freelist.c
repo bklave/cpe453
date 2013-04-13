@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "freelist.h"
 
-static const int kBytesToReserve = 64000;
+static const int kBytesToReserve = 500;
 
 /**
  * The number of bytes that I have free in my data segment
@@ -27,6 +27,11 @@ void *IncreaseFreeListSize() {
 	// Move the Program Break up by 64k bytes.
 	void *previous_program_break = sbrk(kBytesToReserve);
 
+//	char message[100];
+//	snprintf(message, 100, "Allocating a region of size %i...",
+//			unallocated_bytes_in_data_segment);
+//	fputs(message, stdout);
+
 	// Figure out how much we need to add to the address of the old
 	// program break to make it divisible by 16.
 	int complement_of_sixteen = kSixteen
@@ -44,6 +49,8 @@ void *IncreaseFreeListSize() {
 		perror("sbrk(2) failed");
 		return NULL ;
 	}
+
+//	snprintf(message, 100, "ok.\n");
 
 	return previous_program_break;
 }
@@ -75,7 +82,7 @@ Header *AllocateNewHeaderFromFreshMemory(void *previous_program_break,
 	// then continue to make more room! With this, I can handle any size
 	// given to me from malloc(size).
 	while (unallocated_bytes_in_data_segment < size) {
-		puts("Not enough space in data segment. Increasing size.");
+//		puts("Not enough space in data segment. Increasing size.");
 		previous_program_break = IncreaseFreeListSize();
 	}
 
