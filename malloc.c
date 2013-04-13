@@ -69,9 +69,9 @@ void *calloc(size_t nmemb, size_t size) {
 
 void *realloc(void *ptr, size_t size) {
 	if (ptr == NULL ) {
-		malloc(size);
+		return malloc(size);
 	}
 
 	// TODO: Finish realloc().
-	return 0;
+	return NULL;
 }
