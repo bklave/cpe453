@@ -66,7 +66,8 @@ Header *FindSpecificHeader(void *ptr) {
 		cursor = cursor->next;
 	}
 
-	// If we couldn't find the Header * for the given ptr, then return NULL.
+	// If we couldn't find the Header * for the given ptr, then return
+	// NULL.
 	return NULL ;
 }
 
@@ -99,13 +100,13 @@ void *malloc(size_t size) {
 	void *new_memory = NULL;
 
 	if (free_list_head == NULL ) {
-		// If this is the first time running malloc(), then allocate 64k bytes
-		// of memory.
+		// If this is the first time running malloc(), then allocate 64k
+		// bytes of memory.
 		free_list_head = SbrkSomeMoreSpace(kBytesToAllocate);
 		header = free_list_head;
 	} else if ((header = FindSomeFreeMemoryFromFreeList(size))) {
-		// If it's NOT the first time running malloc(), then attempt to find
-		// some existing free memory.
+		// If it's NOT the first time running malloc(), then attempt to
+		// find some existing free memory.
 
 	}
 
@@ -124,8 +125,7 @@ void free(void *ptr) {
 		// If we found the memory, mark it off as "is_free".
 		header->is_free = true;
 	} else {
-		perror("couldn't free *ptr - either you called free(NULL) "
-				"or the memory couldn't be found in the free list");
+		fprintf(stderr, "couldn't free(); *ptr not found in free list");
 	}
 
 }
