@@ -1,4 +1,4 @@
-all: malloc.o malloc.a tryme
+all: malloc.o malloc.a tryme.o tryme
 
 malloc.o:
 	gcc -c malloc.c
@@ -6,8 +6,11 @@ malloc.o:
 malloc.a:
 	ar r malloc.a malloc.o
 
+tryme.o:
+	gcc -c tryme.c
+
 tryme:
-	gcc tryme.c malloc.a -o tryme.out
+	gcc tryme.o malloc.a -o tryme.out
 
 intel-all: lib/libmalloc.so lib64/libmalloc.so
 
@@ -30,5 +33,5 @@ malloc64.o: malloc.c
 	$(CC) $(CFLAGS) -m64 -c -o malloc64.o malloc.c
 
 clean:
-	rm malloc.a malloc.o tryme.out
+	rm malloc.o malloc.a tryme.o tryme.out
 	rm -f malloc.o *~ TAGS

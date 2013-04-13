@@ -1,116 +1,35 @@
-// Don't include <stdlib.h>!
 #include <stdio.h>
-#include "malloc.h"
 #include <unistd.h>
-
-static const int kBytesToAllocate = 64000;
-
-typedef enum {
-	false, true
-} bool;
-
-struct HeaderStruct {
-	size_t size;
-	bool is_free;
-	struct HeaderStruct *next;
-};
-
-typedef struct HeaderStruct Header;
-
-Header *SbrkSomeMoreSpace(size_t size) {
-	Header *new_header;
-
-	// Move the Program Break up by 64k bytes, plus the size of Header.
-	void *previous_program_break = sbrk(sizeof(Header) + size);
-
-	// sbrk(2) error check.
-	if (previous_program_break == (char *) -1) {
-		perror("sbrk(2) failed");
-		return NULL ;
-	}
-
-	// Cast the beginning of the new memory to a Header *.
-	new_header = (Header *) previous_program_break;
-
-	// Initialize the new Header *.
-	new_header->size = size;
-	new_header->is_free = false;
-	new_header->next = NULL;
-
-	// Return a pointer to the new header.
-	return new_header;
-}
-
-/**
- * Header of my free list.
- */
-static Header *free_list_head = NULL;
-
-/**
- * Attempts to fetch an existing Header *.
- */
-Header *FindSpecificHeader(void *ptr) {
-	Header *cursor = free_list_head;
-	void *blob_pointer = NULL;
-
-	// Traverse through the free list, looking for the correct blob data
-	while (cursor != NULL ) {
-		blob_pointer = cursor + 1;
-
-		// Check if this Header * corresponds to the pointer we want.
-		if (ptr == blob_pointer) {
-			return cursor;
-		}
-
-		// Otherwise, keep iterating through the free list.
-		cursor = cursor->next;
-	}
-
-	// If we couldn't find the Header * for the given ptr, then return
-	// NULL.
-	return NULL ;
-}
-
-/**
- * Attempts to find some free memory as large as requested.
- */
-Header *FindSomeFreeMemoryFromFreeList(size_t minimum_size) {
-	Header *cursor = free_list_head;
-
-	// Traverse through the free list, looking for the correct blob data
-	while (cursor != NULL ) {
-
-		// Check if this Header *'s memory is free and large enough
-		if (cursor->is_free == true && cursor->size >= minimum_size) {
-			return cursor;
-		}
-
-		// Otherwise, keep iterating through the free list.
-		cursor = cursor->next;
-	}
-
-	// If we couldn't find a suitable Header *, then return NULL.
-	return NULL ;
-}
+#include <stdlib.h>
+#include "malloc.h"
+#include "util.h"
+#include "freelist.h"
 
 void *malloc(size_t size) {
 	puts("called Girum's version of malloc()");
 
+	// TODO: Handle the case where the size passed in is greater than 64k bytes.
+
 	Header *header = NULL;
 	void *new_memory = NULL;
 
-	if (free_list_head == NULL ) {
-		// If this is the first time running malloc(), then allocate 64k
-		// bytes of memory.
-		free_list_head = SbrkSomeMoreSpace(kBytesToAllocate);
-		header = free_list_head;
-	} else if ((header = FindSomeFreeMemoryFromFreeList(size))) {
-		// If it's NOT the first time running malloc(), then attempt to
-		// find some existing free memory.
-
+	// Try to free some existing memory.
+	if ((header = FindSomeAlreadyFreedMemoryFromFreeList(size)) != NULL ) {
+		// If this succeeds, then do nothing. Use the returned Header * as is.
+	} else {
+		// If we can't use already freed memory, then just make a new Header *.
+		// freelist.c will handle the rest.
+		header = AllocateNewHeaderFromFreshMemory(sbrk(0), size);
 	}
 
+	// Pointer arithmetic: point the pointer to the actual data right above
+	// the Header that we just allocated.
 	new_memory = header + 1;
+
+	// TODO: Perform this check when sbrk(2) is called, and fix it then.
+	if ((((long) new_memory) % 16) != 0) {
+		fprintf(stderr, "memory address is not divisible by 16!\n");
+	}
 
 	return new_memory;
 }
@@ -125,9 +44,8 @@ void free(void *ptr) {
 		// If we found the memory, mark it off as "is_free".
 		header->is_free = true;
 	} else {
-		fprintf(stderr, "couldn't free(); *ptr not found in free list");
+		fprintf(stderr, "couldn't free(); *ptr not found in free list!\n");
 	}
-
 }
 
 void *calloc(size_t nmemb, size_t size) {
