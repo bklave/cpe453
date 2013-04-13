@@ -20,17 +20,29 @@ tryme: malloc.a
 
 intel-all: lib/libmalloc.so lib64/libmalloc.so
 
-lib/libmalloc.so: lib malloc32.o
-	$(CC) $(CFLAGS) -m32 -shared -o $@ malloc32.o
+lib/libmalloc.so: lib util32.o freelist32.o malloc32.o
+	$(CC) $(CFLAGS) -m32 -shared -o $@ util32.o freelist32.o malloc32.o
 
-lib64/libmalloc.so: lib64 malloc64.o
-	$(CC) $(CFLAGS) -shared -o $@ malloc64.o
+lib64/libmalloc.so: lib64 util64.o freelist64.o malloc64.o
+	$(CC) $(CFLAGS) -shared -o $@ util64.o freelist64.o malloc64.o
 
 lib:
 	mkdir lib
 
 lib64:
 	mkdir lib64
+
+util32.o:
+	$(CC) $(CFLAGS) -m32 -c -o util32.o util.c
+
+util64.o:
+	$(CC) $(CFLAGS) -m64 -c -o util64.o util.c
+
+freelist32.o:
+	$(CC) $(CFLAGS) -m32 -c -o freelist32.o freelist.c
+
+freelist64.o:
+	$(CC) $(CFLAGS) -m64 -c -o freelist64.o freelist.c
 
 malloc32.o: malloc.c
 	$(CC) $(CFLAGS) -m32 -c -o malloc32.o malloc.c
@@ -41,3 +53,4 @@ malloc64.o: malloc.c
 clean:
 	rm util.o freelist.o malloc.o malloc.a tryme.o tryme.out
 	rm -f malloc.o *~ TAGS
+	rm malloc32.o malloc64.o lib/libmalloc.so lib64/libmalloc.so
