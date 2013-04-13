@@ -43,22 +43,14 @@ void *IncreaseFreeListSize() {
 
 Header *FindSomeAlreadyFreedMemoryFromFreeList(size_t minimum_size) {
 	Header *cursor = free_list_head_node;
-//	char message[100];
 
 	// Traverse through the free list, looking for the correct blob data
 	for (; cursor != NULL ; cursor = cursor->next) {
-
-//		snprintf(message, 100, "cursor = %p, "
-//				"cursor->next = %p\n", cursor, cursor->next);
-//		fputs(message, stderr);
 
 		// Check if this Header *'s memory is free and large enough
 		if (cursor->is_free == true && cursor->size >= minimum_size) {
 			return cursor;
 		}
-
-		// Otherwise, keep iterating through the free list.
-//		fputs("cursor = cursor->next\n\n", stderr);
 	}
 
 	// If we couldn't find a suitable Header *, then return NULL.
@@ -120,7 +112,6 @@ Header *AllocateNewHeaderFromFreshMemory(size_t size) {
 
 		return new_header;
 	}
-
 }
 
 Header *FindSpecificHeader(void *ptr) {
