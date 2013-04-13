@@ -27,8 +27,17 @@ void *IncreaseFreeListSize() {
 	// Move the Program Break up by 64k bytes.
 	void *previous_program_break = sbrk(kBytesToReserve);
 
+	// Figure out how much we need to add to the address of the old
+	// program break to make it divisible by 16.
+	int complement_of_sixteen = kSixteen
+			- ((long) previous_program_break % kSixteen);
+
+	// Point to the newly "divisible by 16" memory address.
+	previous_program_break += complement_of_sixteen;
+
 	// Update how much unallocated space I now have.
-	unallocated_bytes_in_data_segment += kBytesToReserve;
+	unallocated_bytes_in_data_segment += (kBytesToReserve
+			- complement_of_sixteen);
 
 	// sbrk(2) error check.
 	if (previous_program_break == (char *) -1) {
@@ -62,8 +71,11 @@ Header *AllocateNewHeaderFromFreshMemory(void *previous_program_break,
 		size_t size) {
 	Header *new_header = NULL;
 
-	// If we don't have enough room to make a new Header, then make room!
-	if (unallocated_bytes_in_data_segment < size) {
+	// So long as we don't have enough room to make a new Header,
+	// then continue to make more room! With this, I can handle any size
+	// given to me from malloc(size).
+	while (unallocated_bytes_in_data_segment < size) {
+		puts("Not enough space in data segment. Increasing size.");
 		previous_program_break = IncreaseFreeListSize();
 	}
 
