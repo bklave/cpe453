@@ -13,7 +13,7 @@ void *malloc(size_t size) {
 
 	// Sanity check: size should be a positive number
 	if (size <= 0) {
-		fputs("size <= 0, malloc() will return NULL", stderr);
+//		fputs("size <= 0, malloc() will return NULL", stderr);
 		return NULL ;
 	}
 
@@ -24,7 +24,10 @@ void *malloc(size_t size) {
 	} else {
 		// If we can't use already freed memory, then just make a new
 		// Header *. freelist.c will handle the rest.
-		header = AllocateNewHeaderFromFreshMemory(sbrk(0), size);
+//		snprintf(message, 100, "AllocateNewHeaderFromFreshMemory(%p)\n",
+//				sbrk(0));
+//		fputs(message, stderr);
+		header = AllocateNewHeaderFromFreshMemory(size);
 	}
 
 	// Pointer arithmetic: point the pointer to the actual data right

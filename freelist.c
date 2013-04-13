@@ -15,6 +15,8 @@ static const int kBytesToReserve = 64000;
  */
 long unallocated_bytes_in_data_segment = 0;
 
+void *lowest_fresh_memory_address = NULL;
+
 /**
  * Head node of my free list.
  */
@@ -25,32 +27,30 @@ Header *free_list_head_node = NULL;
  */
 void *IncreaseFreeListSize() {
 	// Move the Program Break up by 64k bytes.
-	void *previous_program_break = sbrk(kBytesToReserve);
+	void *temp_previous_program_break = sbrk(kBytesToReserve);
 
 	// Update how much unallocated space I now have.
 	unallocated_bytes_in_data_segment += kBytesToReserve;
 
 	// sbrk(2) error check.
-	if (previous_program_break == (char *) -1) {
+	if (temp_previous_program_break == (char *) -1) {
 		perror("sbrk(2) failed");
 		return NULL ;
 	}
 
-	return previous_program_break;
+	return temp_previous_program_break;
 }
 
 Header *FindSomeAlreadyFreedMemoryFromFreeList(size_t minimum_size) {
-//	Header *cursor = free_list_head_node;
-	Header *cursor = NULL;
-	char message[100];
+	Header *cursor = free_list_head_node;
+//	char message[100];
 
 	// Traverse through the free list, looking for the correct blob data
-	for (cursor = free_list_head_node; cursor != NULL ;
-			cursor = cursor->next) {
+	for (; cursor != NULL ; cursor = cursor->next) {
 
-		snprintf(message, 100, "cursor = %p, cursor->next = %p\n", cursor,
-				cursor->next);
-		fputs(message, stderr);
+//		snprintf(message, 100, "cursor = %p, "
+//				"cursor->next = %p\n", cursor, cursor->next);
+//		fputs(message, stderr);
 
 		// Check if this Header *'s memory is free and large enough
 		if (cursor->is_free == true && cursor->size >= minimum_size) {
@@ -65,40 +65,62 @@ Header *FindSomeAlreadyFreedMemoryFromFreeList(size_t minimum_size) {
 	return NULL ;
 }
 
-Header *AllocateNewHeaderFromFreshMemory(void *previous_program_break,
-		size_t size) {
+Header *AllocateNewHeaderFromFreshMemory(size_t size) {
 	Header *new_header = NULL;
 
-	// If we don't have enough room to increase our size, then raise the
-	// Program Break once.
-	if (unallocated_bytes_in_data_segment < size) {
-		previous_program_break = IncreaseFreeListSize();
+	// The first time malloc() runs, we need to initialize our
+	// lowest_fresh_memory_address. This is that time.
+	if (free_list_head_node == NULL ) {
+		lowest_fresh_memory_address = IncreaseFreeListSize();
+		free_list_head_node = (Header *) lowest_fresh_memory_address;
+
+		// Move lowest_fresh_memory_address pointer up to its correct
+		// position
+		lowest_fresh_memory_address += sizeof(Header);
+		lowest_fresh_memory_address += size;
+
+		// Fill up the free_list_head_node.
+		free_list_head_node->size = size;
+		free_list_head_node->is_free = false;
+		free_list_head_node->next = NULL;
+
+		// Reduce the size of unallocated_bytes_in_data_segment
+		unallocated_bytes_in_data_segment -= sizeof(Header);
+		unallocated_bytes_in_data_segment -= size;
+
+		return free_list_head_node;
+	} else {
+		// If we *still* don't have enough room, then keep raising the
+		// Program Break. Don't touch the previous_program_break though:
+		// you don't move the program break *up* when allocating more
+		// space for yourself.
+		while (unallocated_bytes_in_data_segment < size) {
+//			fputs("IncreaseFreeListSize()\n", stderr);
+			IncreaseFreeListSize();
+		}
+
+		// Cast the beginning of the new memory to a Header *.
+		new_header = (Header *) lowest_fresh_memory_address;
+
+		// Point the previous_program_break to the end of that memory
+		lowest_fresh_memory_address += sizeof(Header);
+		lowest_fresh_memory_address += size;
+
+		// Initialize the new Header.
+		new_header->size = size;
+		new_header->is_free = false;
+		new_header->next = free_list_head_node;
+
+		// Make this new node the new free_list_head_node.
+		free_list_head_node = new_header;
+
+		// Reduce the size of unallocated_bytes_in_data_segment
+		unallocated_bytes_in_data_segment -= sizeof(Header);
+		unallocated_bytes_in_data_segment -= size;
+
+		return new_header;
 	}
 
-	// If we *still* don't have enough room, then keep raising the
-	// Program Break. Keep the previous_program_break put from the first
-	// time though.
-	while (unallocated_bytes_in_data_segment < size) {
-		IncreaseFreeListSize();
-	}
-
-	// Cast the beginning of the new memory to a Header *.
-	new_header = (Header *) previous_program_break;
-
-	// Initialize the new Header *.
-	new_header->size = size;
-	new_header->is_free = false;
-	new_header->next = free_list_head_node;
-
-	// Make this new node the new free_list_head_node.
-	free_list_head_node = new_header;
-
-	// Reduce the size of unallocated_bytes_in_data_segment
-	unallocated_bytes_in_data_segment -= sizeof(Header);
-	unallocated_bytes_in_data_segment -= size;
-
-	// Return a pointer to the new header.
-	return new_header;
 }
 
 Header *FindSpecificHeader(void *ptr) {
