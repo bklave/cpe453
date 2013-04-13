@@ -1,3 +1,5 @@
 make clean
 make
-./nicotest.sh
+
+./tryme.out
+# ./nicotest.sh

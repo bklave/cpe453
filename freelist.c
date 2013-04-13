@@ -13,12 +13,12 @@ static const int kBytesToReserve = 64000;
 /**
  * The number of bytes that I have free in my data segment
  */
-static long unallocated_bytes_in_data_segment = 0;
+long unallocated_bytes_in_data_segment = 0;
 
 /**
  * Head node of my free list.
  */
-static Header *free_list_head_node = NULL;
+Header *free_list_head_node = NULL;
 
 /**
  * Increases the size of the free list by moving the Program Break up.
@@ -26,19 +26,9 @@ static Header *free_list_head_node = NULL;
 void *IncreaseFreeListSize() {
 	// Move the Program Break up by 64k bytes.
 	void *previous_program_break = sbrk(kBytesToReserve);
-	long debug_flag = GetDebugFlag();
-
-	// Figure out how much we need to add to the address of the old
-	// program break to make it divisible by 16.
-	int complement_of_sixteen = kSixteen
-			- ((long) previous_program_break % kSixteen);
-
-	// Point to the newly "divisible by 16" memory address.
-	previous_program_break += complement_of_sixteen;
 
 	// Update how much unallocated space I now have.
-	unallocated_bytes_in_data_segment += (kBytesToReserve
-			- complement_of_sixteen);
+	unallocated_bytes_in_data_segment += kBytesToReserve;
 
 	// sbrk(2) error check.
 	if (previous_program_break == (char *) -1) {
@@ -50,10 +40,17 @@ void *IncreaseFreeListSize() {
 }
 
 Header *FindSomeAlreadyFreedMemoryFromFreeList(size_t minimum_size) {
-	Header *cursor = free_list_head_node;
+//	Header *cursor = free_list_head_node;
+	Header *cursor = NULL;
+	char message[100];
 
 	// Traverse through the free list, looking for the correct blob data
-	while (cursor != NULL ) {
+	for (cursor = free_list_head_node; cursor != NULL ;
+			cursor = cursor->next) {
+
+		snprintf(message, 100, "cursor = %p, cursor->next = %p\n", cursor,
+				cursor->next);
+		fputs(message, stderr);
 
 		// Check if this Header *'s memory is free and large enough
 		if (cursor->is_free == true && cursor->size >= minimum_size) {
@@ -61,7 +58,7 @@ Header *FindSomeAlreadyFreedMemoryFromFreeList(size_t minimum_size) {
 		}
 
 		// Otherwise, keep iterating through the free list.
-		cursor = cursor->next;
+//		fputs("cursor = cursor->next\n\n", stderr);
 	}
 
 	// If we couldn't find a suitable Header *, then return NULL.
@@ -72,12 +69,17 @@ Header *AllocateNewHeaderFromFreshMemory(void *previous_program_break,
 		size_t size) {
 	Header *new_header = NULL;
 
-	// So long as we don't have enough room to make a new Header,
-	// then continue to make more room! With this, I can handle any size
-	// given to me from malloc(size).
-	while (unallocated_bytes_in_data_segment < size) {
-//		puts("Not enough space in data segment. Increasing size.");
+	// If we don't have enough room to increase our size, then raise the
+	// Program Break once.
+	if (unallocated_bytes_in_data_segment < size) {
 		previous_program_break = IncreaseFreeListSize();
+	}
+
+	// If we *still* don't have enough room, then keep raising the
+	// Program Break. Keep the previous_program_break put from the first
+	// time though.
+	while (unallocated_bytes_in_data_segment < size) {
+		IncreaseFreeListSize();
 	}
 
 	// Cast the beginning of the new memory to a Header *.

@@ -14,9 +14,17 @@ int main(int argc, char *argv[]) {
 	char *s;
 
 	// Should call malloc() implicitly.
-	s = strdup("Tryme");
+//	s = malloc(0);
+//	s = malloc(sizeof(char) * 500);
+//	s = malloc(sizeof(char) * 1000);
+//	s = malloc(sizeof(char) * 1500);
+//	s = malloc(sizeof(char) * 2000);
 
-	puts(s);
-	free(s);
+//	s = malloc(0);
+	s = malloc(sizeof(char) * 50);
+	s = malloc(sizeof(char) * 100);
+	s = malloc(sizeof(char) * 150);
+	s = malloc(sizeof(char) * 200);
+
 	return 0;
 }
