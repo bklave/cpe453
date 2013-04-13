@@ -17,7 +17,7 @@ struct HeaderStruct {
 
 typedef struct HeaderStruct Header;
 
-Header *MoreSpace(size_t size) {
+Header *SbrkSomeMoreSpace(size_t size) {
 	Header *new_header;
 
 	// Move the Program Break up by 64k bytes, plus the size of Header.
@@ -49,13 +49,13 @@ static Header *free_list_head = NULL;
 /**
  * Attempts to fetch an existing Header *.
  */
-Header *FetchExistingHeader(void *ptr) {
+Header *FindSpecificHeader(void *ptr) {
 	Header *cursor = free_list_head;
-	void *blob_pointer;
+	void *blob_pointer = NULL;
 
 	// Traverse through the free list, looking for the correct blob data
 	while (cursor != NULL ) {
-		blob_pointer = cursor + sizeof(Header);
+		blob_pointer = cursor + 1;
 
 		// Check if this Header * corresponds to the pointer we want.
 		if (ptr == blob_pointer) {
@@ -70,17 +70,46 @@ Header *FetchExistingHeader(void *ptr) {
 	return NULL ;
 }
 
+/**
+ * Attempts to find some free memory as large as requested.
+ */
+Header *FindSomeFreeMemoryFromFreeList(size_t minimum_size) {
+	Header *cursor = free_list_head;
+
+	// Traverse through the free list, looking for the correct blob data
+	while (cursor != NULL ) {
+
+		// Check if this Header *'s memory is free and large enough
+		if (cursor->is_free == true && cursor->size >= minimum_size) {
+			return cursor;
+		}
+
+		// Otherwise, keep iterating through the free list.
+		cursor = cursor->next;
+	}
+
+	// If we couldn't find a suitable Header *, then return NULL.
+	return NULL ;
+}
+
 void *malloc(size_t size) {
 	puts("called Girum's version of malloc()");
 
-	// Grab a new reference to head
-	void *new_memory;
+	Header *header = NULL;
+	void *new_memory = NULL;
 
 	if (free_list_head == NULL ) {
-		free_list_head = MoreSpace(size);
-	} else {
-		free_list_head->next = MoreSpace(size);
+		// If this is the first time running malloc(), then allocate 64k bytes
+		// of memory.
+		free_list_head = SbrkSomeMoreSpace(kBytesToAllocate);
+		header = free_list_head;
+	} else if ((header = FindSomeFreeMemoryFromFreeList(size))) {
+		// If it's NOT the first time running malloc(), then attempt to find
+		// some existing free memory.
+
 	}
+
+	new_memory = header + 1;
 
 	return new_memory;
 }
@@ -89,7 +118,7 @@ void free(void *ptr) {
 	puts("called Girum's version of free()");
 
 	// Attempt to fetch the header for the given ptr.
-	Header *header = FetchExistingHeader(ptr);
+	Header *header = FindSpecificHeader(ptr);
 
 	if (header != NULL ) {
 		// If we found the memory, mark it off as "is_free".
