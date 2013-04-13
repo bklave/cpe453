@@ -15,3 +15,7 @@
 *.exe
 *.out
 *.app
+
+# Nico's test scaffold output
+DETAILS
+DETAILS.bak
