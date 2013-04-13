@@ -1,11 +1,22 @@
-#include<string.h>
-#include<stdlib.h>
-#include<stdio.h>
+/*
+ * tryme.c
+ *
+ *  Created on: Apr 12, 2013
+ *      Author: girum
+ */
+
+// Don't include <stdlib.h>!
+#include <string.h>
+#include <stdio.h>
+#include "malloc.h"
 
 int main(int argc, char *argv[]) {
-   char *s;
-   s = strdup("Tryme");    /* should call malloc() implicitly */
-   puts(s);
-   free(s);
-   return 0;
+	char *s;
+
+	// Should call malloc() implicitly.
+	s = strdup("Some string to strdup(). Should call malloc() implicitly.");
+
+	puts(s);
+	free(s);
+	return 0;
 }
