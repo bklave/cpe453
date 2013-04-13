@@ -1,15 +1,21 @@
 all: malloc.o malloc.a tryme.o tryme
 
-malloc.o:
-	gcc -c malloc.c
+util.o:
+	$(CC) $(CFLAGS) -c util.c
 
-malloc.a:
-	ar r malloc.a malloc.o
+freelist.o: util.o
+	$(CC) $(CFLAGS) -c freelist.c
+
+malloc.o: util.o freelist.o
+	$(CC) $(CFLAGS) -c malloc.c
+
+malloc.a: malloc.o
+	ar r malloc.a util.o freelist.o malloc.o
 
 tryme.o:
 	gcc -c tryme.c
 
-tryme:
+tryme: malloc.a
 	gcc tryme.o malloc.a -o tryme.out
 
 intel-all: lib/libmalloc.so lib64/libmalloc.so
