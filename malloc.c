@@ -12,9 +12,9 @@ void *malloc(size_t size) {
 	char message[100];
 
 	// Sanity check: size should be a positive number
-	// FIXME: Why does putting this check stop Nico's tests cold?
 	if (size <= 0) {
-		return NULL;
+		fputs("size <= 0, malloc() will return NULL", stderr);
+		return NULL ;
 	}
 
 	// Try to free some existing memory.
@@ -38,8 +38,8 @@ void *malloc(size_t size) {
 
 	// Debug output
 	if (debug_flag > 0) {
-		snprintf(message, 100, "malloc(%lu) =>"
-				" (ptr=%p, size=%lu)", size, new_memory, size);
+		snprintf(message, 100, "malloc(%d) =>"
+				" (ptr=%p, size=%d)", size, new_memory, size);
 		fputs(message, stderr);
 	}
 
