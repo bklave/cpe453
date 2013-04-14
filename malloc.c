@@ -23,7 +23,9 @@ void *malloc(size_t size) {
 	} else {
 		// If we can't use already freed memory, then just make a new
 		// Header *. freelist.c will handle the rest.
-		header = AllocateNewHeaderFromFreshMemory(size);
+		if ((header = AllocateNewHeaderFromFreshMemory(size)) == NULL) {
+			return NULL;
+		}
 	}
 
 	// Pointer arithmetic: point the pointer to the actual data right
@@ -57,16 +59,46 @@ void free(void *ptr) {
 	}
 }
 
-void *calloc(size_t nmemb, size_t size) {
-	// TODO: Finish calloc().
+void *calloc(size_t num, size_t size) {
+	char *malloc_result = NULL;
+	const size_t bytes_to_allocate = num * size;
+	int counter = 0;
 
-	return 0;
+	// Attempt to malloc() the memory requested.
+	if ((malloc_result = malloc(bytes_to_allocate)) == NULL) {
+		return NULL;
+	}
+
+	// Step through all the memory and initialize it all to 0.
+	for (counter = 0; counter < bytes_to_allocate; ++counter) {
+		*malloc_result = 0;
+	}
+
+	return malloc_result;
 }
 
 void *realloc(void *ptr, size_t size) {
+	Header *header = NULL;
+
 	if (ptr == NULL ) {
 		return malloc(size);
 	}
+
+	// TODO: Don't forget to attempt to merge adjacent memory.
+
+	if ((header = FindSpecificHeader(ptr)) != NULL) {
+		if (size == header->size) {
+			return ptr;
+		} else if (size < header->size) {
+			// TODO
+		} else if (size > header->size) {
+			// TODO
+		}
+
+
+
+	}
+
 
 	// TODO: Finish realloc().
 	return NULL;

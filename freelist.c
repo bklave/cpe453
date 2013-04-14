@@ -34,7 +34,7 @@ void *IncreaseFreeListSize() {
 
 	// sbrk(2) error check.
 	if (temp_previous_program_break == (char *) -1) {
-		perror("sbrk(2) failed");
+//		perror("sbrk(2) failed");
 		return NULL ;
 	}
 
@@ -64,6 +64,12 @@ Header *AllocateNewHeaderFromFreshMemory(size_t size) {
 	// lowest_fresh_memory_address. This is that time.
 	if (free_list_head_node == NULL ) {
 		lowest_fresh_memory_address = IncreaseFreeListSize();
+
+		// If IncreaseFreeListSize() failed, then return NULL
+		if (lowest_fresh_memory_address == NULL) {
+			return NULL;
+		}
+
 		free_list_head_node = (Header *) lowest_fresh_memory_address;
 
 		// Move lowest_fresh_memory_address pointer up to its correct
@@ -88,7 +94,9 @@ Header *AllocateNewHeaderFromFreshMemory(size_t size) {
 		// space for yourself.
 		while (unallocated_bytes_in_data_segment < size) {
 //			fputs("IncreaseFreeListSize()\n", stderr);
-			IncreaseFreeListSize();
+			if (IncreaseFreeListSize() == NULL ) {
+				return NULL ;
+			}
 		}
 
 		// Cast the beginning of the new memory to a Header *.
