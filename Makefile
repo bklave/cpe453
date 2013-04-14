@@ -55,3 +55,4 @@ clean:
 	rm -f malloc.o *~ TAGS
 	rm util32.o util64.o freelist32.o freelist64.o malloc32.o malloc64.o lib/libmalloc.so lib64/libmalloc.so
 	rm DETAILS DETAILS.bak
+	rm -r tryAsgn1.*

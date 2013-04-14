@@ -1,2 +1,0 @@
-size <= 0, malloc() will return NULLsbrk(2) failed: Cannot allocate memory
-Child process (25087) exited due to SIGSEGV.
