@@ -11,7 +11,7 @@ typedef enum {
 } State;
 
 typedef struct {
-	int id; /* The ID of this Philosopher */
+//	int id; /* The ID of this Philosopher */
 
 	pthread_t thread; /* The pthread used to actually run Philosopher
 	 logic. */
@@ -24,8 +24,8 @@ typedef struct {
 	State state; /* Enum for the State that the Philosopher is currently
 	 in (EATING, THINKING, or CHANGING) */
 
-	bool is_hungry; /* If this Philosopher is_hungry, then he will attempt
-	 to EAT next. If he is not hungry, he will attempt to THINK next. */
+//	bool is_hungry; /* If this Philosopher is_hungry, then he will attempt
+//	 to EAT next. If he is not hungry, he will attempt to THINK next. */
 } Philosopher;
 
 void print_status_line(Philosopher philosophers_to_print[], int forks[]);

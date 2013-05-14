@@ -14,28 +14,55 @@ int forks[NUM_PHILOSOPHERS]; /* The Forks. */
 pthread_mutex_t mutex_thread; /* The mutex thread responsible for
  controlling individual forks between the Philosophers. */
 
-void *eat_think_cycle(void *arg) {
-	/*
-	 * This function will be executed as the body of each child thread.
-	 * It expects a single parameter that is a pointer to the Philosopher.
-	 *
-	 * The parameter is a void * to comply with the prototype, but we know
-	 * what's really in there.
-	 */
-	Philosopher *philosopher = (Philosopher *) arg;
+static int number_of_times_to_cycle = 1; /* Command-line argument,
+ default 1. */
 
+void lock_and_print_state() {
 	// Lock the mutex thread, print the status line, then unlock.
 	pthread_mutex_lock(&mutex_thread);
 	print_status_line(philosophers, forks);
 	pthread_mutex_unlock(&mutex_thread);
+}
 
-	// Exit the pthread.
+void *eat_think_cycle(void *arg) {
+	/*
+	 * This function will be executed as the body of each child thread.
+	 * It expects a single parameter that is an int (an ID for the
+	 * Philosopher).
+	 *
+	 * The parameter is a void * to comply with the prototype, but we know
+	 * what's really in there.
+	 */
+	int philosopher_id = *(int *) arg;
+	int i = 0;
+
+	// TODO: For each one of these steps, call lock_and_print_state().
+
+	for (i = 0; i < number_of_times_to_cycle; i++) {
+		// At first, I'm hungry. I want to EAT first.
+		//		Attempt to pick up forks.
+		//		Switch to EATING state.
+		//		Eat for a bit (sleep the thread).
+		//		Switch to CHANGING state.
+		// Now that I've finished EATING, I want to THINK.
+		// 		Attempt to put down forks.
+		//		Switch to THINKING state.
+		//		Think for a bit (sleep the thread).
+		lock_and_print_state();
+	}
+
+	// Kill the pthread.
 	pthread_exit(NULL );
 }
 
 int main(int argc, char *argv[]) {
 	int i = 0;  // Loop counter.
-	int number_of_times_to_cycle = 1; // Command-line argument, default 1.
+	int ids[NUM_PHILOSOPHERS];
+
+	// Initialize the IDs array.
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		ids[i] = i;
+	}
 
 	// Retrieve the command-line argument of how many times to cycle.
 	if (argc >= 2) {
@@ -53,17 +80,17 @@ int main(int argc, char *argv[]) {
 
 	// Initialize the Philosophers and the Forks.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		philosophers[i].id = i;
+//		philosophers[i].id = i;
 		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
 		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
 
-		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
-				philosophers[i].assigned_left_fork);
-		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
-						philosophers[i].assigned_right_fork);
+//		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
+//				philosophers[i].assigned_left_fork);
+//		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
+//						philosophers[i].assigned_right_fork);
 
 		philosophers[i].state = CHANGING;
-		philosophers[i].is_hungry = true;
+//		philosophers[i].is_hungry = true;
 
 		forks[i] = -1;
 	}
@@ -75,7 +102,7 @@ int main(int argc, char *argv[]) {
 		// a thread identifier in childid[i].
 		int res;
 		res = pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
-				(void *) (&philosophers[i]) // Pass the Philosopher object.
+				(void *) (&ids[i]) // Pass the Philosopher object.
 				);
 
 		// Error check.
