@@ -50,14 +50,17 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	// Spawn all the children.
+	// Initialize all of the Philosophers' static datum.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		philosophers[i].id = i;
 		philosophers[i].left_fork = -1;
 		philosophers[i].right_fork = -1;
 		philosophers[i].state = CHANGING;
 		philosophers[i].is_hungry = true;
+	}
 
+	// Spawn each of the Philosophers' child pthreads.
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		// pthread_create() launches a new thread running the function
 		// child(), passes a pointer to the argument in id[i], and places
 		// a thread identifier in childid[i].
