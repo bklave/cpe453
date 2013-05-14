@@ -6,9 +6,18 @@
 #define NUM_PHILOSOPHERS 5
 
 typedef struct {
+	pthread_t temp_thread;
 	pthread_mutex_t thread;
 	int left_fork;
 	int right_fork;
 } Philosopher;
+
+
+
+
+
+
+
+
 
 #endif

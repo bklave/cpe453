@@ -8,11 +8,6 @@
 #include "philosopher.h"
 #include "util.h"
 
-#define NUM_CHILDREN 4
-
-
-Philosopher philosophers[NUM_PHILOSOPHERS];
-
 void *child(void *id) {
 	/*
 	 * This function will be executed as the body of each child thread.
@@ -34,18 +29,8 @@ int main(int argc, char *argv[]) {
 	pid_t ppid;
 	int i;
 
-	int id[NUM_CHILDREN];		// Individual identifiers (see below).
-	pthread_t childid[NUM_CHILDREN]; 	// ctivations for each child.
-
-	// Initialize philosophers[]
-	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		// TODO: Initialize philosopher's thread.
-//		philosophers[i].thread = NULL;
-
-		philosophers[i].left_fork = -1;
-		philosophers[i].right_fork = -1;
-	}
-
+	int id[NUM_PHILOSOPHERS];		// Individual identifiers (see below).
+	Philosopher philosophers[NUM_PHILOSOPHERS]; // ctivations for each child.
 
 	// Initialize the parent process ID for later use.
 	ppid = getpid();
@@ -56,12 +41,15 @@ int main(int argc, char *argv[]) {
 	// Because the loop index will change, the effect is not what one
 	// would hope. So, we give each child its own _independent_ ID in the
 	// ID array.
-	for (i = 0; i < NUM_CHILDREN; i++) {
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		id[i] = i;
 	}
 
 	// Spawn all the children.
-	for (i = 0; i < NUM_CHILDREN; i++) {
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		philosophers[i].left_fork = -1;
+		philosophers[i].right_fork = -1;
+
 		// pthread_create() launches a new thread running the function
 		// child(), passes a pointer to the argument in id[i], and places
 		// a thread identifier in childid[i].
@@ -70,7 +58,7 @@ int main(int argc, char *argv[]) {
 		// address of the i-th element of the array child, but I could
 		// just as well used pointer arithmetic and written "childid+i".
 		int res;
-		res = pthread_create(&childid[i], // Where to put the identifier.
+		res = pthread_create(&philosophers[i].temp_thread, // Where to put the identifier.
 				NULL, // Don't set any special properties.
 				child, // Call the function child().
 				(void *) (&id[i]) // Pass the address of id[i].
@@ -92,8 +80,8 @@ int main(int argc, char *argv[]) {
 	// Note: Unlike the original trivial, pthread_join() requires us to
 	// name a specific thread to wait for, thus the children will always
 	// join in the same order regardless of when they actually terminate.
-	for (i = 0; i < NUM_CHILDREN; i++) {
-		pthread_join(childid[i], NULL );
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		pthread_join(philosophers[i].temp_thread, NULL );
 		printf("Parent  (%d):		child %d exited.\n\n", (int) ppid, i);
 	}
 
