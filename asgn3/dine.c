@@ -85,6 +85,8 @@ int main(int argc, char *argv[]) {
 		printf("Parent  (%d):		child %d exited.\n\n", (int) ppid, i);
 	}
 
+	print_current_state(philosophers);
+
 	// Say goodbye.
 	printf("Parent   (%d):		Goodbye.\n\n", (int) ppid);
 

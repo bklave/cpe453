@@ -13,11 +13,9 @@ typedef struct {
 } Philosopher;
 
 
+void print_current_state(Philosopher philosophers_to_print[]);
 
-
-
-
-
+void sanity_check_philosophers(Philosopher philosophers_to_sanity_check[]);
 
 
 #endif

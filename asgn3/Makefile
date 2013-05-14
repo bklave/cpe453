@@ -1,7 +1,7 @@
 all: dine
 
 dine:
-	gcc -Wall -lpthread -o dine dine.c
+	$(CC) $(CFLAGS) -lpthread -o dine util.c philosopher.c dine.c
 
 clean:
 	rm dine
