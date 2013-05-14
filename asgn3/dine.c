@@ -26,7 +26,7 @@ void *eat_think_cycle(void *arg) {
 
 	for (i = 0; i < number_of_times_to_cycle; i++) {
 		/************************************************
-		 * At first, I'm hungry. I want to EAT first.
+		 * At first, I'm hungry. I want to EAT.
 		 ************************************************/
 		// Attempt to pick up forks.
 		pick_up_fork(philosopher, philosopher->assigned_left_fork);
@@ -77,8 +77,8 @@ int main(int argc, char *argv[]) {
 	// Print the header in the parent thread.
 	print_header();
 
-	// Initialize the mutex thread.
-	if (pthread_mutex_init(&mutex_thread, NULL ) == -1) {
+	// Initialize the global mutex lock.
+	if (pthread_mutex_init(&global_mutex_lock, NULL ) == -1) {
 		fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
 		exit(-1);
 	}
@@ -89,6 +89,12 @@ int main(int argc, char *argv[]) {
 		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
 		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
 		philosophers[i].state = CHANGING;
+
+		// Initialize the mutex lock for this Philosopher.
+		if (pthread_mutex_init(&philosophers[i].mutex_lock, NULL ) == -1) {
+			fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
+			exit(-1);
+		}
 
 //		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
 //				philosophers[i].assigned_left_fork);
@@ -101,11 +107,11 @@ int main(int argc, char *argv[]) {
 	// Spawn each of the Philosophers' child pthreads.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		// pthread_create() launches a new thread running the function
-		// child(), passes a pointer to the argument in id[i], and places
-		// a thread identifier in childid[i].
+		// eat_think_cycle(), passes a pointer to the argument in id[i],
+		// and places a thread identifier in childid[i].
 		int res;
-		res = pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
-				(void *) (&ids[i]) // Pass the Philosopher object.
+		res = pthread_create(&philosophers[i].logic_thread, NULL,
+				eat_think_cycle, (void *) (&ids[i]) // Pass the Philosopher object.
 				);
 
 		// Error check.
@@ -123,7 +129,7 @@ int main(int argc, char *argv[]) {
 
 		// This parent thread will wait for each child thread in the order
 		// of this array.
-		int res = pthread_join(philosophers[i].thread, NULL );
+		int res = pthread_join(philosophers[i].logic_thread, NULL );
 
 		// Error check on the pthread_join() call.
 		if (res == -1) {
@@ -137,8 +143,16 @@ int main(int argc, char *argv[]) {
 	// Print the footer in the parent thread.
 	print_footer();
 
-	// Destroy the mutex thread.
-	if (pthread_mutex_destroy(&mutex_thread) == -1) {
+	// Destroy the mutex threads.
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		if (pthread_mutex_destroy(&philosophers[i].mutex_lock) == -1) {
+			fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
+			exit(-1);
+		}
+	}
+
+	// Destroy the global mutex lock.
+	if (pthread_mutex_init(&global_mutex_lock, NULL ) == -1) {
 		fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
 		exit(-1);
 	}

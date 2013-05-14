@@ -9,11 +9,11 @@
 
 #include "philosopher.h"
 
-void print_status_line() {
+void print_global_state() {
 	int phil = 0, fork = 0;  // Counters.
 
-//	// Lock the mutex thread.
-//	pthread_mutex_lock(&mutex_thread);
+	// Lock the global mutex thread.
+	pthread_mutex_lock(&global_mutex_lock);
 
 	for (phil = 0; phil < NUM_PHILOSOPHERS; phil++) {
 		// Formatting.
@@ -53,15 +53,12 @@ void print_status_line() {
 	// Formatting.
 	printf("|\n");
 
-//	// Unlock the mutex thread.
-//	pthread_mutex_unlock(&mutex_thread);
+	// Unlock the global mutex thread.
+	pthread_mutex_unlock(&global_mutex_lock);
 }
 
 void change_state(Philosopher *philosopher, State new_state) {
 	int left_fork = -1, right_fork = -1;
-
-	// Lock the mutex thread.
-	pthread_mutex_lock(&mutex_thread);
 
 	left_fork = philosopher->assigned_left_fork;
 	right_fork = philosopher->assigned_right_fork;
@@ -69,17 +66,18 @@ void change_state(Philosopher *philosopher, State new_state) {
 	switch (new_state) {
 	case EATING:
 		// If the Philosopher has his left_fork AND his right_fork, then
-		// you can eat.
+		// you can eat. Change state and print global state.
 		if (forks[left_fork] == philosopher->id
 				&& forks[right_fork] == philosopher->id) {
 			philosopher->state = new_state;
+			print_global_state();
 		}
 		// Otherwise, wait for the Philosopher who DOES have the left_fork to
 		// drop it.
 		else if (forks[left_fork] != philosopher->id) {
 			// This parent thread will wait for each child thread in the order
 			// of this array.
-			int res = pthread_join(philosophers[forks[left_fork]].thread,
+			int res = pthread_join(philosophers[forks[left_fork]].logic_thread,
 					NULL );
 
 			// Error check on the pthread_join() call.
@@ -128,15 +126,11 @@ void change_state(Philosopher *philosopher, State new_state) {
 		exit(-1);
 	}
 
-	// Print status and unlock the mutex thread.
-	print_status_line();
-	pthread_mutex_unlock(&mutex_thread);
+	// Print state.
+	print_global_state();
 }
 
 void pick_up_fork(Philosopher *philosopher, int fork) {
-	// Lock the mutex thread.
-	pthread_mutex_lock(&mutex_thread);
-
 	if (forks[fork] == -1) {
 
 		// "Pick up" the Fork by giving it the correct Philosopher ID.
@@ -149,28 +143,20 @@ void pick_up_fork(Philosopher *philosopher, int fork) {
 //				forks[fork] + 'A');
 	}
 
-	// Print status and unlock the mutex thread.
-	print_status_line();
-	pthread_mutex_unlock(&mutex_thread);
+	// Print state.
+	print_global_state();
 }
 
 void put_down_fork(Philosopher *philosopher, int fork) {
-	// Lock the mutex thread.
-	pthread_mutex_lock(&mutex_thread);
-
 	// "Put down" the Fork by giving it a Philosopher ID of -1.
 	forks[fork] = -1;
 //	printf("Philosopher %c put down Fork %d.\n", philosopher->id + 'A', fork);
 
-	// Print status and unlock the mutex thread.
-	print_status_line();
-	pthread_mutex_unlock(&mutex_thread);
+	// Print state.
+	print_global_state();
 }
 
 void dawdle(Philosopher *philosopher) {
-	// Lock the mutex thread.
-	pthread_mutex_lock(&mutex_thread);
-
 	/* Sleep for a random amount of time between 0 and 999 milliseconds.
 	 * This routine is somewhat unreliable, since it doesn't take into
 	 * account the possibility that the nanosleep could be interrupted for
@@ -187,7 +173,6 @@ void dawdle(Philosopher *philosopher) {
 		perror("nanosleep");
 	}
 
-	// Print status and unlock the mutex thread.
-	print_status_line();
-	pthread_mutex_unlock(&mutex_thread);
+	// Print state.
+	print_global_state();
 }

@@ -13,8 +13,11 @@ typedef enum {
 typedef struct {
 	int id; /* The ID of this Philosopher */
 
-	pthread_t thread; /* The pthread used to actually run Philosopher
-	 logic. */
+	pthread_t logic_thread; /* The pthread used to
+	 run overarching Philosopher "Eat-Think" cycle logic. */
+
+	pthread_mutex_t mutex_lock; /* The mutex lock responsible for
+	 locking this Philosopher. */
 
 	int assigned_left_fork; /* Integer representing which fork the
 	 Philosopher will be holding in his left hand. Don't change this. */
@@ -32,10 +35,10 @@ Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
 int forks[NUM_PHILOSOPHERS]; /* The Forks. Each fork contains the ID of
  the Philosopher holding it, or -1 for none.*/
 
-pthread_mutex_t mutex_thread; /* The mutex thread responsible for
- controlling individual forks between the Philosophers. */
+pthread_mutex_t global_mutex_lock; /* A global mutex thread responsible
+ for ensuring Philosopher state output is clean. */
 
-void print_status_line();
+void print_global_state();
 void change_state(Philosopher *philosopher, State new_state);
 void pick_up_fork(Philosopher *philosopher, int fork);
 void put_down_fork(Philosopher *philosopher, int fork);
