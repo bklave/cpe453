@@ -34,20 +34,43 @@ void *eat_think_cycle(void *arg) {
 	 * what's really in there.
 	 */
 	int philosopher_id = *(int *) arg;
+	Philosopher *philosopher = &philosophers[philosopher_id];
 	int i = 0;
 
-	// TODO: For each one of these steps, call lock_and_print_state().
-
 	for (i = 0; i < number_of_times_to_cycle; i++) {
-		// At first, I'm hungry. I want to EAT first.
-		//		Attempt to pick up forks.
-		//		Switch to EATING state.
-		//		Eat for a bit (sleep the thread).
-		//		Switch to CHANGING state.
-		// Now that I've finished EATING, I want to THINK.
-		// 		Attempt to put down forks.
-		//		Switch to THINKING state.
-		//		Think for a bit (sleep the thread).
+		/* At first, I'm hungry. I want to EAT first. */
+		// Attempt to pick up forks.
+		pick_up_fork(philosopher, philosopher->assigned_left_fork);
+		lock_and_print_state();
+
+		pick_up_fork(philosopher, philosopher->assigned_right_fork);
+		lock_and_print_state();
+
+		// Switch to EATING state.
+		change_state(philosopher, EATING);
+		lock_and_print_state();
+
+		// Eat for a bit (sleep the thread).
+		dawdle();
+		lock_and_print_state();
+
+		// Switch to CHANGING state.
+		change_state(philosopher, CHANGING);
+
+		/* Now that I've finished EATING, I want to THINK. */
+		// Attempt to put down forks.
+		put_down_fork(philosopher, philosopher->assigned_left_fork);
+		lock_and_print_state();
+
+		put_down_fork(philosopher, philosopher->assigned_right_fork);
+		lock_and_print_state();
+
+		// Switch to THINKING state.
+		change_state(philosopher, THINKING);
+		lock_and_print_state();
+
+		// Think for a bit (sleep the thread).
+		dawdle();
 		lock_and_print_state();
 	}
 

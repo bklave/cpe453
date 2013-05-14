@@ -30,10 +30,10 @@ typedef struct {
 
 void print_status_line(Philosopher philosophers_to_print[], int forks[]);
 
-void change_state(Philosopher philosopher, State new_state);
+void change_state(Philosopher *philosopher, State new_state);
 
-void pick_up_fork(Philosopher philosopher, int fork);
+void pick_up_fork(Philosopher *philosopher, int fork);
 
-void put_down_fork(Philosopher philosopher, int fork);
+void put_down_fork(Philosopher *philosopher, int fork);
 
 #endif
