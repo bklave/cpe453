@@ -66,7 +66,7 @@ void change_state(Philosopher *philosopher, State new_state) {
 	switch (new_state) {
 	case EATING:
 		// If the Philosopher has his left_fork AND his right_fork, then
-		// you can eat. Change state and print global state.
+		// you can eat. Change the Philosophers' state and print status.
 		if (forks[left_fork] == philosopher->id
 				&& forks[right_fork] == philosopher->id) {
 			philosopher->state = new_state;
@@ -77,7 +77,7 @@ void change_state(Philosopher *philosopher, State new_state) {
 		else if (forks[left_fork] != philosopher->id) {
 			// This parent thread will wait for each child thread in the order
 			// of this array.
-			int res = pthread_join(philosophers[forks[left_fork]].logic_thread,
+			int res = pthread_join(philosophers[forks[left_fork]].loop_thread,
 					NULL );
 
 			// Error check on the pthread_join() call.
@@ -89,6 +89,7 @@ void change_state(Philosopher *philosopher, State new_state) {
 
 			// Once the other philosopher has dropped his fork
 			philosopher->state = new_state;
+			print_global_state();
 		}
 		// Otherwise, wait for the Philosopher who DOES have the left_fork to
 		// drop it.
