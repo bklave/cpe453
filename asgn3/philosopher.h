@@ -41,8 +41,8 @@ pthread_mutex_t global_mutex_lock; /* A global mutex thread responsible
  for ensuring Philosopher state output is clean. */
 
 void change_state(Philosopher *philosopher, State new_state);
-void pick_up_forks(Philosopher *philosopher);
-void put_down_forks(Philosopher *philosopher);
+void pick_up_fork(Philosopher *philosopher, Fork *fork);
+void put_down_fork(Philosopher *philosopher, Fork *fork);
 void dawdle(Philosopher *philosopher);
 
 #endif

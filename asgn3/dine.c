@@ -8,10 +8,10 @@
 #include "philosopher.h"
 #include "util.h"
 
-#define DEBUG 0
-
 static int number_of_times_to_cycle = 1; /* Command-line argument,
  default 1. */
+
+#define DEBUG 0
 
 void *eat_think_cycle(void *arg) {
 	/*
@@ -31,9 +31,15 @@ void *eat_think_cycle(void *arg) {
 		 * At first, I'm hungry. I want to EAT.
 		 ************************************************/
 		// Attempt to pick up forks.
-//		pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-//		pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
-		pick_up_forks(philosopher);
+		if (philosopher->id % 2 == 0) {
+			// Evens pick up right-hand forks first.
+			pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+			pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+		} else {
+			// Odds pick up left-hand forks first.
+			pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+			pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+		}
 
 		// Switch to EATING state.
 		change_state(philosopher, EATING);
@@ -48,9 +54,8 @@ void *eat_think_cycle(void *arg) {
 		 * Now that I've finished EATING, I want to THINK.
 		 *************************************************/
 		// Attempt to put down forks.
-//		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-//		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
-		put_down_forks(philosopher);
+		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
 
 		// Switch to THINKING state.
 		change_state(philosopher, THINKING);
@@ -118,18 +123,11 @@ int main(int argc, char *argv[]) {
 		philosophers[i].state = CHANGING;
 	}
 
-	// Spawn each of the Philosophers' loop logic pthreads.
+	// Spawn each of the Philosophers' pthreads.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		// pthread_create() launches a new thread running the function
-		// eat_think_cycle(), passes a pointer to the argument in id[i],
-		// and places a thread identifier in childid[i].
-		int res;
-		res = pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
+		if (pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
 				(void *) (&ids[i]) // Pass the Philosopher object.
-				);
-
-		// Error check.
-		if (res == -1) {
+				) == -1) {
 			fprintf(stderr, "Child %i:	%s\n", i, strerror(errno));
 			exit(-1);
 		}

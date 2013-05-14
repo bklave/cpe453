@@ -9,6 +9,8 @@
 
 #include "philosopher.h"
 
+#define DEBUG 0
+
 void print_global_state() {
 	Philosopher *philosopher = NULL;
 	Fork *fork = NULL;
@@ -88,78 +90,59 @@ void change_state(Philosopher *philosopher, State new_state) {
 	print_global_state();
 }
 
-void pick_up_forks(Philosopher *philosopher) {
-	Fork *left_fork = NULL, *right_fork = NULL;
-
-	left_fork = &forks[philosopher->assigned_left_fork];
-	right_fork = &forks[philosopher->assigned_right_fork];
-
-	// Try to lock the left fork.
-	if (pthread_mutex_lock(&left_fork->mutex_lock) != 0) {
-		perror("mutex_lock");
-		exit(-1);
-	}
-
-	// Try to lock the right fork.
-	if (pthread_mutex_lock(&right_fork->mutex_lock) != 0) {
-		perror("mutex_lock");
-		exit(-1);
-	}
-
-	left_fork->owner = philosopher;
-	print_global_state();
-
-	right_fork->owner = philosopher;
-	print_global_state();
+void pick_up_fork(Philosopher *philosopher, Fork *fork) {
 
 //	// Assert that this Fork's current owner is NULL.
 //	if (fork->owner != NULL ) {
 //		fprintf(stderr, "When Philosopher %c attempted to pick up "
 //				"Fork %d, Fork %d's owner was Philosopher %c and it "
-//				"should have been NULL", philosopher->id + 'A', fork->id,
+//				"should have been NULL\n", philosopher->id + 'A', fork->id,
 //				fork->id, fork->owner->id + 'A');
 //		exit(-1);
 //	}
-//
-//	// Set the Fork's owner to this Philosopher.
-//	fork->owner = philosopher;
 
+	// Try to lock the left fork.
+	if (pthread_mutex_lock(&fork->mutex_lock) != 0) {
+		perror("mutex_lock");
+		exit(-1);
+	}
+
+#if DEBUG
+	printf("Philosopher %c locked Fork %d.\n", philosopher->id + 'A',
+			fork->id);
+#endif
+
+	fork->owner = philosopher;
+	print_global_state();
 }
 
-void put_down_forks(Philosopher *philosopher) {
-	Fork *left_fork = NULL, *right_fork = NULL;
-
-	left_fork = &forks[philosopher->assigned_left_fork];
-	right_fork = &forks[philosopher->assigned_right_fork];
+void put_down_fork(Philosopher *philosopher, Fork *fork) {
 
 //	// Assert that this Fork's current owner is indeed this Philosopher.
-//	if (lef->owner != philosopher) {
+//	if (fork->owner != philosopher) {
 //		fprintf(stderr, "When Philosopher %c attempted to put down "
 //				"Fork %d, Fork %d's owner was NOT Philosopher %c. "
-//				"It was Philosopher %c instead.", philosopher->id + 'A',
+//				"It was Philosopher %c instead.\n", philosopher->id + 'A',
 //				fork->id, fork->id, philosopher->id + 'A',
 //				fork->owner->id + 'A');
 //		exit(-1);
 //	}
 
 	// Set the Fork's owner to NULL.
-	left_fork->owner = NULL;
-	print_global_state();
-
-	right_fork->owner = NULL;
+	fork->owner = NULL;
 	print_global_state();
 
 	// Unlock the left fork
-	if (pthread_mutex_unlock(&left_fork->mutex_lock) != 0) {
+	if (pthread_mutex_unlock(&fork->mutex_lock) != 0) {
 		perror("mutex_unlock");
 		exit(-1);
 	}
 
-	// Unlock the right fork
-	if (pthread_mutex_unlock(&right_fork->mutex_lock) != 0) {
-		perror("mutex_unlock");
-		exit(-1);
-	}
+#if DEBUG
+	printf("Philosopher %c unlocked Fork %d\n", philosopher->id + 'A',
+			fork->id);
+#endif
+
 }
 
 void dawdle(Philosopher *philosopher) {
