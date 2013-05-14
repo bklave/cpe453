@@ -31,8 +31,9 @@ void *eat_think_cycle(void *arg) {
 		 * At first, I'm hungry. I want to EAT.
 		 ************************************************/
 		// Attempt to pick up forks.
-		pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-		pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+//		pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+//		pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+		pick_up_forks(philosopher);
 
 		// Switch to EATING state.
 		change_state(philosopher, EATING);
@@ -47,14 +48,18 @@ void *eat_think_cycle(void *arg) {
 		 * Now that I've finished EATING, I want to THINK.
 		 *************************************************/
 		// Attempt to put down forks.
-		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+//		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+//		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+		put_down_forks(philosopher);
 
 		// Switch to THINKING state.
 		change_state(philosopher, THINKING);
 
 		// Think for a bit (sleep the thread).
 		dawdle(philosopher);
+
+		// Switch to CHANGING state.
+		change_state(philosopher, CHANGING);
 	}
 
 	// Kill the pthread.
