@@ -11,26 +11,35 @@ typedef enum {
 } State;
 
 typedef struct {
-	pthread_t temp_thread;  // TODO: Can't use these, use mutex_t instead.
-	pthread_mutex_t thread;
-	int left_fork;
-	int right_fork;
-	State state;
-	bool is_hungry;
+	int id; /* The ID of this Philosopher */
+
+	pthread_t thread; /* The pthread used to actually run Philosopher
+	 logic. */
+
+	int left_fork; /* Integer representing which fork the Philosopher has
+	 in his left hand, or -1 for none. */
+
+	int right_fork; /* Integer representing which fork the Philosopher has
+	 in his right hand, or -1 for none. */
+
+	State state; /* Enum for the State that the Philosopher is currently
+	 in (EATING, THINKING, or CHANGING) */
+
+	bool is_hungry; /* If this Philosopher is_hungry, then he will attempt
+	 to EAT next. If he is not hungry, he will attempt to THINK next. */
 } Philosopher;
 
-void print_current_state(Philosopher philosophers_to_print[]);
+void print_status_line(Philosopher philosophers_to_print[]);
 
-void sanity_check_philosophers(Philosopher philosophers_to_sanity_check[]);
+//void sanity_check_all_philosophers(Philosopher philosophers_to_sanity_check[]);
 
-void start_eating(Philosopher philosopher);
+void perform_eat_think_cycle(Philosopher philosopher,
+		pthread_mutex_t mutex_thread);
 
-void start_thinking(Philosopher philosopher);
+void change_state(Philosopher philosopher, State new_state);
 
-void start_transition(Philosopher philosopher);
+void pick_up_fork(Philosopher philosopher, int fork);
 
-void pick_up_fork(Philosopher philosopher);
-
-void put_down_fork(Philosopher philosopher);
+void put_down_fork(Philosopher philosopher, int fork);
 
 #endif
