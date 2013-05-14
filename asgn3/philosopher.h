@@ -17,5 +17,14 @@ void print_current_state(Philosopher philosophers_to_print[]);
 
 void sanity_check_philosophers(Philosopher philosophers_to_sanity_check[]);
 
+void start_eating(Philosopher philosopher);
+
+void start_thinking(Philosopher philosopher);
+
+void start_transition(Philosopher philosopher);
+
+void pick_up_fork(Philosopher philosopher);
+
+void put_down_fork(Philosopher philosopher);
 
 #endif

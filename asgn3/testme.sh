@@ -1,4 +1,4 @@
 make clean
 make
-./dine
+./dine 1
 

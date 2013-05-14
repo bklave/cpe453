@@ -32,6 +32,14 @@ int main(int argc, char *argv[]) {
 	int id[NUM_PHILOSOPHERS];		// Individual identifiers (see below).
 	Philosopher philosophers[NUM_PHILOSOPHERS]; // ctivations for each child.
 
+	int number_of_times_to_cycle = 1;
+
+	if (argc == 2) {
+		number_of_times_to_cycle = strtol(argv[1], NULL, 10);
+	}
+
+	printf("Will cycle %d times.\n", number_of_times_to_cycle);
+
 	// Initialize the parent process ID for later use.
 	ppid = getpid();
 
