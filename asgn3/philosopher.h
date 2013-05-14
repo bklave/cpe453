@@ -16,9 +16,9 @@ typedef struct {
 	pthread_t thread; /* The pthread_t used to run Philosopher
 	 state logic. */
 
-	int assigned_left_fork; /* Integer representing which fork the
+	int des_left_fork; /* Integer representing which fork the
 	 Philosopher will be holding in his left hand. Don't change this. */
-	int assigned_right_fork; /* Integer representing which fork the
+	int des_right_fork; /* Integer representing which fork the
 	 Philosopher will be holding in his right hand.  Don't change this. */
 
 	State state; /* Enum for the State that the Philosopher is currently
@@ -34,7 +34,7 @@ typedef struct {
 	pthread_mutex_t mutex_lock; /* Mutex lock for this Fork. */
 } Fork;
 
-Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
+Philosopher phils[NUM_PHILOSOPHERS]; /* The Philosophers. */
 Fork forks[NUM_PHILOSOPHERS]; /* The Forks. */
 
 pthread_mutex_t global_mutex_lock; /* A global mutex thread responsible

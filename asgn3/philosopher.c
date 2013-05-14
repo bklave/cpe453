@@ -25,7 +25,7 @@ void print_global_state() {
 
 		// Print the forks that this Philosopher has in hand.
 		for (f = 0; f < NUM_PHILOSOPHERS; f++) {
-			philosopher = &philosophers[p];
+			philosopher = &phils[p];
 			fork = &forks[f];
 
 			if (fork->owner == philosopher) {
@@ -36,7 +36,7 @@ void print_global_state() {
 		}
 
 		// Print the State that this Philosopher is currently in.
-		switch (philosophers[p].state) {
+		switch (phils[p].state) {
 		case EATING:
 			printf(" Eat   ");
 			break;
@@ -48,7 +48,7 @@ void print_global_state() {
 			break;
 		default:
 			fprintf(stderr, "Error: Philosopher %d has unknown "
-					"state: %u", p, philosophers[p].state);
+					"state: %u", p, phils[p].state);
 		}
 	}
 
@@ -58,16 +58,6 @@ void print_global_state() {
 	// Unlock the global mutex thread.
 	pthread_mutex_unlock(&global_mutex_lock);
 }
-
-/**
- * Nico Email:
- *
- * Each philosopher should be a pthread (rather than having a pthread_t),
- * and you should be modelling the forks as binary semaphores.  That is,
- * to take a fork, you pthread_mutex_lock() it, and to release it you
- * pthread_mutex_unlock() it.  If you try to lock a lock that's already
- * locked, the thread attempting that will block until it's unlocked.
- */
 
 void change_state(Philosopher *philosopher, State new_state) {
 
@@ -92,15 +82,6 @@ void change_state(Philosopher *philosopher, State new_state) {
 
 void pick_up_fork(Philosopher *philosopher, Fork *fork) {
 
-//	// Assert that this Fork's current owner is NULL.
-//	if (fork->owner != NULL ) {
-//		fprintf(stderr, "When Philosopher %c attempted to pick up "
-//				"Fork %d, Fork %d's owner was Philosopher %c and it "
-//				"should have been NULL\n", philosopher->id + 'A', fork->id,
-//				fork->id, fork->owner->id + 'A');
-//		exit(-1);
-//	}
-
 	// Try to lock the left fork.
 	if (pthread_mutex_lock(&fork->mutex_lock) != 0) {
 		perror("mutex_lock");
@@ -117,16 +98,6 @@ void pick_up_fork(Philosopher *philosopher, Fork *fork) {
 }
 
 void put_down_fork(Philosopher *philosopher, Fork *fork) {
-
-//	// Assert that this Fork's current owner is indeed this Philosopher.
-//	if (fork->owner != philosopher) {
-//		fprintf(stderr, "When Philosopher %c attempted to put down "
-//				"Fork %d, Fork %d's owner was NOT Philosopher %c. "
-//				"It was Philosopher %c instead.\n", philosopher->id + 'A',
-//				fork->id, fork->id, philosopher->id + 'A',
-//				fork->owner->id + 'A');
-//		exit(-1);
-//	}
 
 	// Set the Fork's owner to NULL.
 	fork->owner = NULL;

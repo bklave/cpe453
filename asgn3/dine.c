@@ -13,7 +13,7 @@ static int number_of_times_to_cycle = 1; /* Command-line argument,
 
 #define DEBUG 0
 
-void *eat_think_cycle(void *arg) {
+void *cycle(void *arg) {
 	/*
 	 * This function will be executed as the body of each child thread.
 	 * It expects a single parameter that is an int (an ID for the
@@ -23,7 +23,7 @@ void *eat_think_cycle(void *arg) {
 	 * what's really in there.
 	 */
 	int philosopher_id = *(int *) arg;
-	Philosopher *philosopher = &philosophers[philosopher_id];
+	Philosopher *phil = &phils[philosopher_id];
 	int i = 0;
 
 	for (i = 0; i < number_of_times_to_cycle; i++) {
@@ -31,40 +31,40 @@ void *eat_think_cycle(void *arg) {
 		 * At first, I'm hungry. I want to EAT.
 		 ************************************************/
 		// Attempt to pick up forks.
-		if (philosopher->id % 2 == 0) {
+		if (phil->id % 2 == 0) {
 			// Evens pick up right-hand forks first.
-			pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
-			pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+			pick_up_fork(phil, &forks[phil->des_right_fork]);
+			pick_up_fork(phil, &forks[phil->des_left_fork]);
 		} else {
 			// Odds pick up left-hand forks first.
-			pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-			pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+			pick_up_fork(phil, &forks[phil->des_left_fork]);
+			pick_up_fork(phil, &forks[phil->des_right_fork]);
 		}
 
 		// Switch to EATING state.
-		change_state(philosopher, EATING);
+		change_state(phil, EATING);
 
 		// Eat for a bit (sleep the thread).
-		dawdle(philosopher);
+		dawdle(phil);
 
 		// Switch to CHANGING state.
-		change_state(philosopher, CHANGING);
+		change_state(phil, CHANGING);
 
 		/*************************************************
 		 * Now that I've finished EATING, I want to THINK.
 		 *************************************************/
 		// Attempt to put down forks.
-		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
-		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
+		put_down_fork(phil, &forks[phil->des_left_fork]);
+		put_down_fork(phil, &forks[phil->des_right_fork]);
 
 		// Switch to THINKING state.
-		change_state(philosopher, THINKING);
+		change_state(phil, THINKING);
 
 		// Think for a bit (sleep the thread).
-		dawdle(philosopher);
+		dawdle(phil);
 
 		// Switch to CHANGING state.
-		change_state(philosopher, CHANGING);
+		change_state(phil, CHANGING);
 	}
 
 	// Kill the pthread.
@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
 
 	// Initialize the global mutex lock.
 	if (pthread_mutex_init(&global_mutex_lock, NULL ) == -1) {
-		fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
+		fprintf(stderr, "pthread_mutex_init"
+				" failed: %s", strerror(errno));
 		exit(-1);
 	}
 
@@ -109,34 +110,43 @@ int main(int argc, char *argv[]) {
 
 	// Initialize the Philosophers.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		philosophers[i].id = i;
-		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
-		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
+		phils[i].id = i;
+		phils[i].des_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
+		phils[i].des_right_fork = (i % NUM_PHILOSOPHERS);
 
 #if DEBUG
-		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
-				philosophers[i].assigned_left_fork);
-		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
-				philosophers[i].assigned_right_fork);
+		printf("Philosopher %c's assigned "
+				"left fork is %d\n", i + 'A',
+				phils[i].des_left_fork);
+		printf("Philosopher %c's assigned "
+				"right fork is %d\n\n", i + 'A',
+				phils[i].des_right_fork);
 #endif
 
-		philosophers[i].state = CHANGING;
+		phils[i].state = CHANGING;
 	}
 
 	// Spawn each of the Philosophers' pthreads.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		if (pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
-				(void *) (&ids[i]) // Pass the Philosopher object.
-				) == -1) {
-			fprintf(stderr, "Child %i:	%s\n", i, strerror(errno));
+		int res;
+		pthread_t *t = &phils[i].thread;
+
+		res = pthread_create(t, NULL, cycle, (void *) (&ids[i]));
+
+		if (res == -1) {
+			fprintf(stderr, "Child %i:	"
+					"%s\n", i, strerror(errno));
 			exit(-1);
 		}
 	}
 
 	// Now wait for each Philosopher's thread to finish.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		if (pthread_join(philosophers[i].thread, NULL ) == -1) {
-			fprintf(stderr, "Child %i:	%s\n", i, strerror(errno));
+		int res;
+
+		res = pthread_join(phils[i].thread, NULL );
+		if (res == -1) {
+			perror("join");
 			exit(-1);
 		}
 	}
@@ -155,7 +165,8 @@ int main(int argc, char *argv[]) {
 
 	// Destroy the global mutex lock.
 	if (pthread_mutex_init(&global_mutex_lock, NULL ) == -1) {
-		fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
+		fprintf(stderr, "pthread_mutex_init"
+				" failed: %s", strerror(errno));
 		exit(-1);
 	}
 
