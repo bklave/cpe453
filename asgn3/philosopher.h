@@ -33,9 +33,6 @@ void print_status_line(Philosopher philosophers_to_print[]);
 
 //void sanity_check_all_philosophers(Philosopher philosophers_to_sanity_check[]);
 
-void perform_eat_think_cycle(Philosopher philosopher,
-		pthread_mutex_t mutex_thread);
-
 void change_state(Philosopher philosopher, State new_state);
 
 void pick_up_fork(Philosopher philosopher, int fork);

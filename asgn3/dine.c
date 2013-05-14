@@ -8,39 +8,40 @@
 #include "philosopher.h"
 #include "util.h"
 
-void *child(void *id) {
-	Philosopher *philosopher = (Philosopher *) id;
+Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
 
+pthread_mutex_t mutex_thread; /* The mutex thread responsible for
+ controlling individual forks between the Philosophers. */
+
+void *eat_think_cycle(void *arg) {
 	/*
 	 * This function will be executed as the body of each child thread.
-	 * It expects a single parameter that is a pointer to an integer, its
-	 * ID.
+	 * It expects a single parameter that is a pointer to the Philosopher.
 	 *
 	 * The parameter is a void * to comply with the prototype, but we know
 	 * what's really in there.
 	 */
-	int who_am_i = philosopher->id;
+	Philosopher *philosopher = (Philosopher *) arg;
 
-	printf("Child %d (%d):		Hello.\n\n", who_am_i, (int) getpid());
-	printf("Child %d (%d):		Goodbye.\n\n", who_am_i, (int) getpid());
+	// Lock the mutex thread, print the status line, then unlock.
+	pthread_mutex_lock(&mutex_thread);
+	print_status_line(philosophers);
+	pthread_mutex_unlock(&mutex_thread);
 
-	return NULL ; 	// Exits the thread with no final message.
+	// Exit the pthread.
+	pthread_exit(NULL );
 }
 
 int main(int argc, char *argv[]) {
-	int i;
+	int i = 0;  // Loop counter.
+	int number_of_times_to_cycle = 1; // Command-line argument, default 1.
 
-	Philosopher philosophers[NUM_PHILOSOPHERS]; // Create Philosophers.
-
-	pthread_mutex_t mutex_thread;
-
-	int number_of_times_to_cycle = 1; // The number of times to cycle.
-
-	if (argc == 2) {
+	// Retrieve the command-line argument of how many times to cycle.
+	if (argc >= 2) {
 		number_of_times_to_cycle = strtol(argv[1], NULL, 10);
 	}
 
-	// Parent thread prints header.
+	// Print the header in the parent thread.
 	print_header();
 
 	// Initialize the mutex thread.
@@ -61,9 +62,7 @@ int main(int argc, char *argv[]) {
 		// child(), passes a pointer to the argument in id[i], and places
 		// a thread identifier in childid[i].
 		int res;
-		res = pthread_create(&philosophers[i].thread, // Where to put the identifier.
-				NULL, // Don't set any special properties.
-				child, // Call the function child().
+		res = pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
 				(void *) (&philosophers[i]) // Pass the Philosopher object.
 				);
 
@@ -80,20 +79,20 @@ int main(int argc, char *argv[]) {
 	// join in the same order regardless of when they actually terminate.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 
-		int res;
-		res = pthread_join(philosophers[i].thread, NULL );
+		// This parent thread will wait for each child thread in the order
+		// of this array.
+		int res = pthread_join(philosophers[i].thread, NULL );
 
-		// Error check.
+		// Error check on the pthread_join() call.
 		if (res == -1) {
 			fprintf(stderr, "Child %i:	%s\n", i, strerror(errno));
 			exit(-1);
 		}
 
-		printf("|  Parent:		child %d exited.\n", i);
-		print_status_line(philosophers);
+		printf("|  Child %d exited.\n", i);
 	}
 
-	// Parent thread prints footer.
+	// Print the footer in the parent thread.
 	print_footer();
 
 	// Destroy the mutex thread.
