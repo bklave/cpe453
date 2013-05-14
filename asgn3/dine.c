@@ -5,48 +5,13 @@
 #include <unistd.h>
 #include <pthread.h>
 
-#include <assert.h>
+#include "philosopher.h"
+#include "util.h"
 
 #define NUM_CHILDREN 4
-#define NUM_PHILOSOPHERS 5
 
-typedef struct {
-	pthread_mutex_t thread;
-	int left_fork;
-	int right_fork;
-} Philosopher;
 
 Philosopher philosophers[NUM_PHILOSOPHERS];
-
-void sanity_check_philosophers(Philosopher *philosophers_to_sanity_check[]) {
-	// Data structure representing each fork, and who is currently holding
-	// the fork.
-	int forks[NUM_PHILOSOPHERS];
-	int i = 0;
-	int left_fork = -1, right_fork = -1;
-
-	// Set each of the forks to set their owner to be -1.
-	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		forks[i] = -1;
-	}
-
-	// Perform sanity checks on each of the philosophers.
-	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		// Reference the forks that each philosopher claims he has
-		// ownership of.
-		left_fork = (*philosophers_to_sanity_check)[i].left_fork;
-		right_fork = (*philosophers_to_sanity_check)[i].right_fork;
-
-		// Assert that those forks truly are unused.
-		assert(forks[left_fork] == -1);
-		assert(forks[right_fork] == -1);
-
-		// If everything is okay, then set the forks to be used by this
-		// philosopher.
-		forks[left_fork] = i;
-		forks[right_fork] = i;
-	}
-}
 
 void *child(void *id) {
 	/*
@@ -80,6 +45,7 @@ int main(int argc, char *argv[]) {
 		philosophers[i].left_fork = -1;
 		philosophers[i].right_fork = -1;
 	}
+
 
 	// Initialize the parent process ID for later use.
 	ppid = getpid();
