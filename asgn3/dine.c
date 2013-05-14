@@ -26,22 +26,19 @@ void *child(void *id) {
 }
 
 int main(int argc, char *argv[]) {
-	pid_t ppid;
 	int i;
 
 	int id[NUM_PHILOSOPHERS];		// Individual identifiers (see below).
 	Philosopher philosophers[NUM_PHILOSOPHERS]; // ctivations for each child.
 
-	int number_of_times_to_cycle = 1;
+	int number_of_times_to_cycle = 1; // The number of times to cycle.
 
 	if (argc == 2) {
 		number_of_times_to_cycle = strtol(argv[1], NULL, 10);
 	}
 
-	printf("Will cycle %d times.\n", number_of_times_to_cycle);
-
-	// Initialize the parent process ID for later use.
-	ppid = getpid();
+	// Parent thread prints header.
+	print_header();
 
 	// Initialize an array of ID numbers for the children. It would be
 	// tempting to just pass the loop index (like we did with trivial),
@@ -57,14 +54,12 @@ int main(int argc, char *argv[]) {
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		philosophers[i].left_fork = -1;
 		philosophers[i].right_fork = -1;
+		philosophers[i].state = CHANGING;
+		philosophers[i].is_hungry = true;
 
 		// pthread_create() launches a new thread running the function
 		// child(), passes a pointer to the argument in id[i], and places
 		// a thread identifier in childid[i].
-		//
-		// A note on C: below, I write "&childid[i]" to indicate the
-		// address of the i-th element of the array child, but I could
-		// just as well used pointer arithmetic and written "childid+i".
 		int res;
 		res = pthread_create(&philosophers[i].temp_thread, // Where to put the identifier.
 				NULL, // Don't set any special properties.
@@ -80,9 +75,6 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Say hello.
-	printf("Parent   (%d):		Hello.\n\n", (int) ppid);
-
 	// Now wait for each child thread to finish.
 	//
 	// Note: Unlike the original trivial, pthread_join() requires us to
@@ -90,13 +82,12 @@ int main(int argc, char *argv[]) {
 	// join in the same order regardless of when they actually terminate.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		pthread_join(philosophers[i].temp_thread, NULL );
-		printf("Parent  (%d):		child %d exited.\n\n", (int) ppid, i);
+		printf("|  Parent:		child %d exited.\n", i);
+		print_current_state(philosophers);
 	}
 
-	print_current_state(philosophers);
-
-	// Say goodbye.
-	printf("Parent   (%d):		Goodbye.\n\n", (int) ppid);
+	// Parent thread prints footer.
+	print_footer();
 
 	return 0;  // Exit successfully.
 }

@@ -1,17 +1,23 @@
 #include <pthread.h>
+#include "util.h"
 
 #ifndef PHILOSOPHER_H
 #define PHILOSOPHER_H
 
 #define NUM_PHILOSOPHERS 5
 
+typedef enum {
+	EATING, THINKING, CHANGING
+} State;
+
 typedef struct {
-	pthread_t temp_thread;
+	pthread_t temp_thread;  // TODO: Can't use these, use mutex_t instead.
 	pthread_mutex_t thread;
 	int left_fork;
 	int right_fork;
+	State state;
+	bool is_hungry;
 } Philosopher;
-
 
 void print_current_state(Philosopher philosophers_to_print[]);
 
