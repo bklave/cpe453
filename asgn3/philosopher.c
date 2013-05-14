@@ -6,7 +6,7 @@
 
 #include "philosopher.h"
 
-void print_status_line(Philosopher philosophers_to_print[]) {
+void print_status_line(Philosopher philosophers_to_print[], int forks[]) {
 	int phil = 0, fork = 0;  // Counters.
 
 	// Sanity check the Philosophers you were given.
@@ -17,13 +17,26 @@ void print_status_line(Philosopher philosophers_to_print[]) {
 		// Formatting.
 		printf("| ");
 
-		// Print the forks that this Philosopher has in hand.
+//		// Print the forks that this Philosopher has in hand.
+//		for (fork = 0; fork < NUM_PHILOSOPHERS; fork++) {
+//			if (philosophers_to_print[phil].left_fork == fork) {
+//				printf("%d", fork);
+//			} else if (philosophers_to_print[phil].right_fork == fork) {
+//				printf("%d", fork);
+//			} else {
+//				printf("-");
+//			}
+//		}
+
 		for (fork = 0; fork < NUM_PHILOSOPHERS; fork++) {
-			if (philosophers_to_print[phil].left_fork == fork) {
+
+			// If this Philosopher is holding this Fork, then print out
+			// this Fork for this Philosopher.
+			if (forks[fork] == phil) {
 				printf("%d", fork);
-			} else if (philosophers_to_print[phil].right_fork == fork) {
-				printf("%d", fork);
-			} else {
+			}
+			// Otherwise, print a '-' character.
+			else {
 				printf("-");
 			}
 		}
@@ -50,43 +63,43 @@ void print_status_line(Philosopher philosophers_to_print[]) {
 	printf("|\n");
 }
 
-void sanity_check_all_philosophers(Philosopher philosophers_to_sanity_check[]) {
-	// Data structure representing each fork, and who is currently holding
-	// the fork.
-	int forks[NUM_PHILOSOPHERS];
-	int i = 0;
-	int left_fork = -1, right_fork = -1;
-
-	// Set each of the forks to set their owner to be -1.
-	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		forks[i] = -1;
-	}
-
-	// Perform sanity checks on each of the philosophers.
-	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		// Reference the forks that each philosopher claims he has
-		// ownership of.
-		left_fork = philosophers_to_sanity_check[i].left_fork;
-		right_fork = philosophers_to_sanity_check[i].right_fork;
-
-		// Assert that those forks truly are unused.
-		if (forks[left_fork] == -1) {
-			fprintf(stderr, "Philosopher %d claims fork %d as his left fork, "
-					"but it is already taken by Philosopher %d", i, left_fork,
-					forks[left_fork]);
-			exit(-1);
-		}
-		if (forks[right_fork] == -1) {
-			fprintf(stderr, "Philosopher %d claims fork %d as his right fork, "
-					"but it is already taken by Philosopher %d", i, left_fork,
-					forks[left_fork]);
-			exit(-1);
-		}
-
-		// If everything is okay, then set the forks to be used by this
-		// philosopher.
-		forks[left_fork] = i;
-		forks[right_fork] = i;
-	}
-}
+//void sanity_check_all_philosophers(Philosopher philosophers_to_sanity_check[]) {
+//	// Data structure representing each fork, and who is currently holding
+//	// the fork.
+//	int forks[NUM_PHILOSOPHERS];
+//	int i = 0;
+//	int left_fork = -1, right_fork = -1;
+//
+//	// Set each of the forks to set their owner to be -1.
+//	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+//		forks[i] = -1;
+//	}
+//
+//	// Perform sanity checks on each of the philosophers.
+//	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+//		// Reference the forks that each philosopher claims he has
+//		// ownership of.
+//		left_fork = philosophers_to_sanity_check[i].left_fork;
+//		right_fork = philosophers_to_sanity_check[i].right_fork;
+//
+//		// Assert that those forks truly are unused.
+//		if (forks[left_fork] == -1) {
+//			fprintf(stderr, "Philosopher %d claims fork %d as his left fork, "
+//					"but it is already taken by Philosopher %d", i, left_fork,
+//					forks[left_fork]);
+//			exit(-1);
+//		}
+//		if (forks[right_fork] == -1) {
+//			fprintf(stderr, "Philosopher %d claims fork %d as his right fork, "
+//					"but it is already taken by Philosopher %d", i, left_fork,
+//					forks[left_fork]);
+//			exit(-1);
+//		}
+//
+//		// If everything is okay, then set the forks to be used by this
+//		// philosopher.
+//		forks[left_fork] = i;
+//		forks[right_fork] = i;
+//	}
+//}
 

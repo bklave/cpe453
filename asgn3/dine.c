@@ -9,6 +9,7 @@
 #include "util.h"
 
 Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
+int forks[NUM_PHILOSOPHERS]; /* The Forks. */
 
 pthread_mutex_t mutex_thread; /* The mutex thread responsible for
  controlling individual forks between the Philosophers. */
@@ -25,7 +26,7 @@ void *eat_think_cycle(void *arg) {
 
 	// Lock the mutex thread, print the status line, then unlock.
 	pthread_mutex_lock(&mutex_thread);
-	print_status_line(philosophers);
+	print_status_line(philosophers, forks);
 	pthread_mutex_unlock(&mutex_thread);
 
 	// Exit the pthread.
@@ -50,13 +51,21 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	// Initialize all of the Philosophers' static datum.
+	// Initialize the Philosophers and the Forks.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		philosophers[i].id = i;
-		philosophers[i].left_fork = -1;
-		philosophers[i].right_fork = -1;
+		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
+		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
+
+		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
+				philosophers[i].assigned_left_fork);
+		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
+						philosophers[i].assigned_right_fork);
+
 		philosophers[i].state = CHANGING;
 		philosophers[i].is_hungry = true;
+
+		forks[i] = -1;
 	}
 
 	// Spawn each of the Philosophers' child pthreads.
@@ -92,7 +101,7 @@ int main(int argc, char *argv[]) {
 			exit(-1);
 		}
 
-		printf("|  Child %d exited.\n", i);
+//		printf("|  Child %d exited.\n", i);
 	}
 
 	// Print the footer in the parent thread.

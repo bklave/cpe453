@@ -16,11 +16,10 @@ typedef struct {
 	pthread_t thread; /* The pthread used to actually run Philosopher
 	 logic. */
 
-	int left_fork; /* Integer representing which fork the Philosopher has
-	 in his left hand, or -1 for none. */
-
-	int right_fork; /* Integer representing which fork the Philosopher has
-	 in his right hand, or -1 for none. */
+	int assigned_left_fork; /* Integer representing which fork the
+	 Philosopher will be holding in his left hand. Don't change this. */
+	int assigned_right_fork; /* Integer representing which fork the
+	 Philosopher will be holding in his right hand.  Don't change this. */
 
 	State state; /* Enum for the State that the Philosopher is currently
 	 in (EATING, THINKING, or CHANGING) */
@@ -29,9 +28,7 @@ typedef struct {
 	 to EAT next. If he is not hungry, he will attempt to THINK next. */
 } Philosopher;
 
-void print_status_line(Philosopher philosophers_to_print[]);
-
-//void sanity_check_all_philosophers(Philosopher philosophers_to_sanity_check[]);
+void print_status_line(Philosopher philosophers_to_print[], int forks[]);
 
 void change_state(Philosopher philosopher, State new_state);
 
