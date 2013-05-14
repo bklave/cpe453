@@ -10,31 +10,31 @@
 #include "philosopher.h"
 
 void print_global_state() {
-	int phil = 0, fork = 0;  // Counters.
+	Philosopher *philosopher = NULL;
+	Fork *fork = NULL;
+	int p = 0, f = 0;  // Counters.
 
 	// Lock the global mutex thread.
 	pthread_mutex_lock(&global_mutex_lock);
 
-	for (phil = 0; phil < NUM_PHILOSOPHERS; phil++) {
+	for (p = 0; p < NUM_PHILOSOPHERS; p++) {
 		// Formatting.
 		printf("| ");
 
 		// Print the forks that this Philosopher has in hand.
-		for (fork = 0; fork < NUM_PHILOSOPHERS; fork++) {
+		for (f = 0; f < NUM_PHILOSOPHERS; f++) {
+			philosopher = &philosophers[p];
+			fork = &forks[f];
 
-			// If this Philosopher is holding this Fork, then print out
-			// this Fork for this Philosopher.
-			if (forks[fork] == phil) {
-				printf("%d", fork);
-			}
-			// Otherwise, print a '-' character.
-			else {
+			if (fork->owner == philosopher) {
+				printf("%d", fork->id);
+			} else {
 				printf("-");
 			}
 		}
 
 		// Print the State that this Philosopher is currently in.
-		switch (philosophers[phil].state) {
+		switch (philosophers[p].state) {
 		case EATING:
 			printf(" Eat   ");
 			break;
@@ -45,8 +45,8 @@ void print_global_state() {
 			printf("       ");
 			break;
 		default:
-			fprintf(stderr, "Error: Philosopher %d has unknown state: %u", phil,
-					philosophers[phil].state);
+			fprintf(stderr, "Error: Philosopher %d has unknown "
+					"state: %u", p, philosophers[p].state);
 		}
 	}
 
@@ -57,73 +57,30 @@ void print_global_state() {
 	pthread_mutex_unlock(&global_mutex_lock);
 }
 
-void change_state(Philosopher *philosopher, State new_state) {
-	int left_fork = -1, right_fork = -1;
+/**
+ * Nico Email:
+ *
+ * Each philosopher should be a pthread (rather than having a pthread_t),
+ * and you should be modelling the forks as binary semaphores.  That is,
+ * to take a fork, you pthread_mutex_lock() it, and to release it you
+ * pthread_mutex_unlock() it.  If you try to lock a lock that's already
+ * locked, the thread attempting that will block until it's unlocked.
+ */
 
-	left_fork = philosopher->assigned_left_fork;
-	right_fork = philosopher->assigned_right_fork;
+void change_state(Philosopher *philosopher, State new_state) {
 
 	switch (new_state) {
 	case EATING:
-		// If the Philosopher has his left_fork AND his right_fork, then
-		// you can eat. Change the Philosophers' state and print status.
-		if (forks[left_fork] == philosopher->id
-				&& forks[right_fork] == philosopher->id) {
-			philosopher->state = new_state;
-			print_global_state();
-		}
-		// Otherwise, wait for the Philosopher who DOES have the left_fork to
-		// drop it.
-		else if (forks[left_fork] != philosopher->id) {
-			// This parent thread will wait for each child thread in the order
-			// of this array.
-			int res = pthread_join(philosophers[forks[left_fork]].loop_thread,
-					NULL );
-
-			// Error check on the pthread_join() call.
-			if (res == -1) {
-				fprintf(stderr, "Child %i:	%s\n", forks[left_fork],
-						strerror(errno));
-				exit(-1);
-			}
-
-			// Once the other philosopher has dropped his fork
-			philosopher->state = new_state;
-			print_global_state();
-		}
-		// Otherwise, wait for the Philosopher who DOES have the left_fork to
-		// drop it.
-		else if (forks[right_fork] != philosopher->id) {
-//			// This parent thread will wait for each child thread in the order
-//			// of this array.
-//			int res = pthread_join(philosophers[forks[right_fork]].thread,
-//					NULL );
-//
-//			// Error check on the pthread_join() call.
-//			if (res == -1) {
-//				fprintf(stderr, "Child %i:	%s\n", forks[right_fork],
-//						strerror(errno));
-//				exit(-1);
-//			}
-		}
 
 		break;
 	case THINKING:
-		// If the Philosopher isn't holding his left_fork AND isn't
-		// holding his right_fork, then he can think.
-		if (forks[left_fork] != philosopher->id
-				&& forks[right_fork] != philosopher->id) {
-			philosopher->state = new_state;
-		} else {
-			// Wait for the Philosopher who DOES have the fork to drop it.
-		}
 
 		break;
 	case CHANGING:
-		philosopher->state = new_state;
+
 		break;
 	default:
-		perror("Unknown state");
+		perror("Attempted to change to unknown state.");
 		exit(-1);
 	}
 
@@ -131,27 +88,27 @@ void change_state(Philosopher *philosopher, State new_state) {
 	print_global_state();
 }
 
-void pick_up_fork(Philosopher *philosopher, int fork) {
-	if (forks[fork] == -1) {
+void pick_up_fork(Philosopher *philosopher, Fork *fork) {
 
-		// "Pick up" the Fork by giving it the correct Philosopher ID.
-		forks[fork] = philosopher->id;
-//		printf("Philosopher %c picked up Fork %d.\n", philosopher->id + 'A',
-//				fork);
-	} else {
-//		printf("Philosopher %c couldn't pick up Fork %d because "
-//				"Philosopher %c already had it.\n", philosopher->id + 'A', fork,
-//				forks[fork] + 'A');
-	}
+	// Attempt to lock the Fork that you want to pick up. If the Fork is
+	// already locked by another Philosopher's thread, then this process
+	// will block until that Fork is unlocked.
+
+	// Assert that this Fork's current owner is NULL.
+
+	// Set the Fork's owner to this Philosopher.
 
 	// Print state.
 	print_global_state();
 }
 
-void put_down_fork(Philosopher *philosopher, int fork) {
-	// "Put down" the Fork by giving it a Philosopher ID of -1.
-	forks[fork] = -1;
-//	printf("Philosopher %c put down Fork %d.\n", philosopher->id + 'A', fork);
+void put_down_fork(Philosopher *philosopher, Fork *fork) {
+
+	// Assert that this Fork's current owner is indeed this Philosopher.
+
+	// Set the Fork's owner to NULL.
+
+	// Unlock the Fork that you just put down.
 
 	// Print state.
 	print_global_state();

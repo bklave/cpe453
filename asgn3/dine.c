@@ -8,6 +8,8 @@
 #include "philosopher.h"
 #include "util.h"
 
+#define DEBUG 0
+
 static int number_of_times_to_cycle = 1; /* Command-line argument,
  default 1. */
 
@@ -29,8 +31,8 @@ void *eat_think_cycle(void *arg) {
 		 * At first, I'm hungry. I want to EAT.
 		 ************************************************/
 		// Attempt to pick up forks.
-		pick_up_fork(philosopher, philosopher->assigned_left_fork);
-		pick_up_fork(philosopher, philosopher->assigned_right_fork);
+		pick_up_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+		pick_up_fork(philosopher, &forks[philosopher->assigned_right_fork]);
 
 		// Switch to EATING state.
 		change_state(philosopher, EATING);
@@ -45,9 +47,8 @@ void *eat_think_cycle(void *arg) {
 		 * Now that I've finished EATING, I want to THINK.
 		 *************************************************/
 		// Attempt to put down forks.
-		put_down_fork(philosopher, philosopher->assigned_left_fork);
-
-		put_down_fork(philosopher, philosopher->assigned_right_fork);
+		put_down_fork(philosopher, &forks[philosopher->assigned_left_fork]);
+		put_down_fork(philosopher, &forks[philosopher->assigned_right_fork]);
 
 		// Switch to THINKING state.
 		change_state(philosopher, THINKING);
@@ -83,25 +84,32 @@ int main(int argc, char *argv[]) {
 		exit(-1);
 	}
 
-	// Initialize the Philosophers and the Forks.
+	// Initialize the Forks.
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		forks[i].owner = NULL;
+
+		// Initialize each mutex lock.
+		if (pthread_mutex_init(&forks[i].mutex_lock, NULL ) == -1) {
+			fprintf(stderr, "pthread_mutex_init"
+					" failed: %s", strerror(errno));
+			exit(-1);
+		}
+	}
+
+	// Initialize the Philosophers.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
 		philosophers[i].id = i;
 		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
 		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
+
+#if DEBUG
+		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
+				philosophers[i].assigned_left_fork);
+		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
+				philosophers[i].assigned_right_fork);
+#endif
+
 		philosophers[i].state = CHANGING;
-
-//		// Initialize the mutex lock for this Philosopher.
-//		if (pthread_mutex_init(&philosophers[i].logic_thread, NULL ) == -1) {
-//			fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
-//			exit(-1);
-//		}
-
-//		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
-//				philosophers[i].assigned_left_fork);
-//		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
-//				philosophers[i].assigned_right_fork);
-
-		forks[i] = -1;
 	}
 
 	// Spawn each of the Philosophers' loop logic pthreads.
@@ -110,8 +118,8 @@ int main(int argc, char *argv[]) {
 		// eat_think_cycle(), passes a pointer to the argument in id[i],
 		// and places a thread identifier in childid[i].
 		int res;
-		res = pthread_create(&philosophers[i].loop_thread, NULL,
-				eat_think_cycle, (void *) (&ids[i]) // Pass the Philosopher object.
+		res = pthread_create(&philosophers[i].thread, NULL, eat_think_cycle,
+				(void *) (&ids[i]) // Pass the Philosopher object.
 				);
 
 		// Error check.
@@ -121,9 +129,9 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Now wait for each loop thread to finish.
+	// Now wait for each Philosopher's thread to finish.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-		if (pthread_join(philosophers[i].loop_thread, NULL ) == -1) {
+		if (pthread_join(philosophers[i].thread, NULL ) == -1) {
 			fprintf(stderr, "Child %i:	%s\n", i, strerror(errno));
 			exit(-1);
 		}
@@ -132,13 +140,14 @@ int main(int argc, char *argv[]) {
 	// Print the footer in the parent thread.
 	print_footer();
 
-//	// Destroy the mutex threads.
-//	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-//		if (pthread_mutex_destroy(&philosophers[i].logic_thread) == -1) {
-//			fprintf(stderr, "pthread_mutex_init failed: %s", strerror(errno));
-//			exit(-1);
-//		}
-//	}
+	// Destroy the Forks' mutex locks.
+	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		if (pthread_mutex_destroy(&forks[i].mutex_lock) == -1) {
+			fprintf(stderr, "pthread_mutex_init "
+					"failed: %s", strerror(errno));
+			exit(-1);
+		}
+	}
 
 	// Destroy the global mutex lock.
 	if (pthread_mutex_init(&global_mutex_lock, NULL ) == -1) {
