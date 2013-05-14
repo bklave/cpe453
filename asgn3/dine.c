@@ -86,6 +86,7 @@ int main(int argc, char *argv[]) {
 
 	// Initialize the Forks.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
+		forks[i].id = i;
 		forks[i].owner = NULL;
 
 		// Initialize each mutex lock.
