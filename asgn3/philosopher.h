@@ -29,11 +29,16 @@ typedef struct {
 } Philosopher;
 
 Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
-int forks[NUM_PHILOSOPHERS]; /* The Forks. */
+int forks[NUM_PHILOSOPHERS]; /* The Forks. Each fork contains the ID of
+ the Philosopher holding it, or -1 for none.*/
 
-void print_status_line(Philosopher philosophers_to_print[], int forks[]);
+pthread_mutex_t mutex_thread; /* The mutex thread responsible for
+ controlling individual forks between the Philosophers. */
+
+void print_status_line();
 void change_state(Philosopher *philosopher, State new_state);
 void pick_up_fork(Philosopher *philosopher, int fork);
 void put_down_fork(Philosopher *philosopher, int fork);
+void dawdle(Philosopher *philosopher);
 
 #endif

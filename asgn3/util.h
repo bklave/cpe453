@@ -6,9 +6,6 @@ typedef enum {
 } bool;
 
 void print_header();
-
 void print_footer();
-
-void dawdle();
 
 #endif

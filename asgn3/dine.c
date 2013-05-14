@@ -8,18 +8,8 @@
 #include "philosopher.h"
 #include "util.h"
 
-pthread_mutex_t mutex_thread; /* The mutex thread responsible for
- controlling individual forks between the Philosophers. */
-
 static int number_of_times_to_cycle = 1; /* Command-line argument,
  default 1. */
-
-static void lock_and_print_state() {
-	// Lock the mutex thread, print the status line, then unlock.
-	pthread_mutex_lock(&mutex_thread);
-	print_status_line(philosophers, forks);
-	pthread_mutex_unlock(&mutex_thread);
-}
 
 void *eat_think_cycle(void *arg) {
 	/*
@@ -40,18 +30,13 @@ void *eat_think_cycle(void *arg) {
 		 ************************************************/
 		// Attempt to pick up forks.
 		pick_up_fork(philosopher, philosopher->assigned_left_fork);
-		lock_and_print_state();
-
 		pick_up_fork(philosopher, philosopher->assigned_right_fork);
-		lock_and_print_state();
 
 		// Switch to EATING state.
 		change_state(philosopher, EATING);
-		lock_and_print_state();
 
 		// Eat for a bit (sleep the thread).
-		dawdle();
-		lock_and_print_state();
+		dawdle(philosopher);
 
 		// Switch to CHANGING state.
 		change_state(philosopher, CHANGING);
@@ -61,18 +46,14 @@ void *eat_think_cycle(void *arg) {
 		 *************************************************/
 		// Attempt to put down forks.
 		put_down_fork(philosopher, philosopher->assigned_left_fork);
-		lock_and_print_state();
 
 		put_down_fork(philosopher, philosopher->assigned_right_fork);
-		lock_and_print_state();
 
 		// Switch to THINKING state.
 		change_state(philosopher, THINKING);
-		lock_and_print_state();
 
 		// Think for a bit (sleep the thread).
-		dawdle();
-		lock_and_print_state();
+		dawdle(philosopher);
 	}
 
 	// Kill the pthread.
@@ -107,13 +88,12 @@ int main(int argc, char *argv[]) {
 		philosophers[i].id = i;
 		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
 		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
+		philosophers[i].state = CHANGING;
 
 //		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
 //				philosophers[i].assigned_left_fork);
 //		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
 //				philosophers[i].assigned_right_fork);
-
-		philosophers[i].state = CHANGING;
 
 		forks[i] = -1;
 	}
