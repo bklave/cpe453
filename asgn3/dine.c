@@ -8,16 +8,13 @@
 #include "philosopher.h"
 #include "util.h"
 
-Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
-int forks[NUM_PHILOSOPHERS]; /* The Forks. */
-
 pthread_mutex_t mutex_thread; /* The mutex thread responsible for
  controlling individual forks between the Philosophers. */
 
 static int number_of_times_to_cycle = 1; /* Command-line argument,
  default 1. */
 
-void lock_and_print_state() {
+static void lock_and_print_state() {
 	// Lock the mutex thread, print the status line, then unlock.
 	pthread_mutex_lock(&mutex_thread);
 	print_status_line(philosophers, forks);
@@ -38,7 +35,9 @@ void *eat_think_cycle(void *arg) {
 	int i = 0;
 
 	for (i = 0; i < number_of_times_to_cycle; i++) {
-		/* At first, I'm hungry. I want to EAT first. */
+		/************************************************
+		 * At first, I'm hungry. I want to EAT first.
+		 ************************************************/
 		// Attempt to pick up forks.
 		pick_up_fork(philosopher, philosopher->assigned_left_fork);
 		lock_and_print_state();
@@ -57,7 +56,9 @@ void *eat_think_cycle(void *arg) {
 		// Switch to CHANGING state.
 		change_state(philosopher, CHANGING);
 
-		/* Now that I've finished EATING, I want to THINK. */
+		/*************************************************
+		 * Now that I've finished EATING, I want to THINK.
+		 *************************************************/
 		// Attempt to put down forks.
 		put_down_fork(philosopher, philosopher->assigned_left_fork);
 		lock_and_print_state();
@@ -103,17 +104,16 @@ int main(int argc, char *argv[]) {
 
 	// Initialize the Philosophers and the Forks.
 	for (i = 0; i < NUM_PHILOSOPHERS; i++) {
-//		philosophers[i].id = i;
+		philosophers[i].id = i;
 		philosophers[i].assigned_left_fork = ((i + 1) % NUM_PHILOSOPHERS);
 		philosophers[i].assigned_right_fork = (i % NUM_PHILOSOPHERS);
 
 //		printf("Philosopher %c's assigned left fork is %d\n", i + 'A',
 //				philosophers[i].assigned_left_fork);
 //		printf("Philosopher %c's assigned right fork is %d\n\n", i + 'A',
-//						philosophers[i].assigned_right_fork);
+//				philosophers[i].assigned_right_fork);
 
 		philosophers[i].state = CHANGING;
-//		philosophers[i].is_hungry = true;
 
 		forks[i] = -1;
 	}

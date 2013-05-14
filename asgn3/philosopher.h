@@ -11,7 +11,7 @@ typedef enum {
 } State;
 
 typedef struct {
-//	int id; /* The ID of this Philosopher */
+	int id; /* The ID of this Philosopher */
 
 	pthread_t thread; /* The pthread used to actually run Philosopher
 	 logic. */
@@ -28,12 +28,12 @@ typedef struct {
 //	 to EAT next. If he is not hungry, he will attempt to THINK next. */
 } Philosopher;
 
+Philosopher philosophers[NUM_PHILOSOPHERS]; /* The Philosophers. */
+int forks[NUM_PHILOSOPHERS]; /* The Forks. */
+
 void print_status_line(Philosopher philosophers_to_print[], int forks[]);
-
 void change_state(Philosopher *philosopher, State new_state);
-
 void pick_up_fork(Philosopher *philosopher, int fork);
-
 void put_down_fork(Philosopher *philosopher, int fork);
 
 #endif
