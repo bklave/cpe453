@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <string.h>
 #include "superblock.h"
 #include "file.h"
 #include "util.h"
@@ -66,6 +67,7 @@ int main(int argc, char *argv[]) {
 	char *path = NULL;
 	bool verbose = false, partition = false, subpartition = false;
 	Superblock superblock = { 0 };
+	char *new_path = NULL;
 
 	for (i = 1; i < argc; i++) {
 
@@ -97,6 +99,15 @@ int main(int argc, char *argv[]) {
 	if (argc > 2 && argv[argc - 2][0] != '-' && argv[argc - 1][0] != '-') {
 		image_filename = argv[argc - 2];
 		path = argv[argc - 1];
+
+		/* "Paths that do not include a leading Ô/Õ are processed
+		 * relative to the root directory" */
+		if (path[0] != '/') {
+			new_path = malloc(sizeof(char) * strlen(path) + 2);
+			strcpy(new_path, "/");
+			strcat(new_path, path);
+			path = new_path;
+		}
 	}
 	// Otherwise, the user didn't specify a path after all.
 	else {
@@ -104,11 +115,18 @@ int main(int argc, char *argv[]) {
 		path = "/";
 	}
 
+	printf("Path: %s\n", path);
+
 	// Open and initalize the image. Initialize the superblock.
 	fp = initalize(fp, &superblock, image_filename, verbose);
 
 	// Find and print the correct file/directory.
 	find_file(fp, &superblock, path, "/", 1, verbose);
+
+	// If you had to malloc a new_path, then free it.
+	if (new_path != NULL ) {
+		free(new_path);
+	}
 
 	// Close the image.
 	if (fclose(fp) != 0) {

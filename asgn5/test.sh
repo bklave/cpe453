@@ -24,5 +24,10 @@ echo "minls /"
 ./minls $IMAGE /
 echo ""
 
-echo "minsls"
+echo "minls src"
+./minls $IMAGE src
+echo ""
 
+echo "minls src/system"
+./minls $IMAGE src/system
+echo  ""
