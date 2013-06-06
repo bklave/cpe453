@@ -27,7 +27,7 @@ void print_superblock(Superblock *superblock) {
 	printf("  zonesize: %d\n", get_zonesize(superblock));
 	printf("  ptrs_per_zone: UNKNOWN\n");
 	printf("  ino_per_block: UNKNOWN\n");
-	printf("  wrongended: UNKNOWN\n");
+	printf("  wrongended: UNKNOWN\n\n");
 }
 
 int get_first_iblock(Superblock *superblock) {
@@ -51,5 +51,6 @@ int get_wrongended(Superblock *superblock) {
 }
 
 int get_inode_start_block(Superblock *superblock) {
-	return (2 * ONE_KILOBYTE) + superblock->i_blocks + superblock->z_blocks;
+	return (2 + superblock->i_blocks + superblock->z_blocks)
+			* superblock->blocksize;
 }

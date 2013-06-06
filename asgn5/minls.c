@@ -94,7 +94,7 @@ int main(int argc, char *argv[]) {
 	print_superblock(&superblock);
 
 	// Seek to the first inode in the system?
-	if (fseek(fp, get_first_iblock(&superblock), SEEK_SET)) {
+	if (fseek(fp, get_inode_start_block(&superblock), SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
@@ -102,7 +102,7 @@ int main(int argc, char *argv[]) {
 	// Read the first inode?
 	fread(&firstInode, sizeof(Inode), 1, fp);
 
-	// Check for errors on the fread().
+	// Check for errors on the fread()?
 	if (ferror(fp)) {
 		perror("file error");
 		exit(-1);
