@@ -12,7 +12,7 @@
 #include <stdlib.h>
 #include <math.h>
 #include "superblock.h"
-#include "inode.h"
+#include "file.h"
 #include "util.h"
 
 /**
@@ -32,7 +32,6 @@
 /*
  * End useful constants.
  */
-
 
 int main(int argc, char *argv[]) {
 	FILE *fp = NULL;
@@ -88,22 +87,14 @@ int main(int argc, char *argv[]) {
 	// Print the superblock.
 	print_superblock(&superblock);
 
-	// Seek to the root inode in the system.
-	printf("Root inode at index %d\n", get_inode_index(&superblock, 1));
-
-	if (fseek(fp, get_inode_index(&superblock, 1), SEEK_SET)) {
-		perror("fseek");
-		exit(-1);
-	}
-
-	// Read that root inode.
-	fread(&rootInode, sizeof(Inode), 1, fp);
-	error_check_file_pointer(fp);
+	// Get the inode for the root directory.
+	rootInode = get_inode(fp, &superblock, 1);
 
 	// Print out the root inode.
 	print_inode(&rootInode);
 
 	// Print out the root directory.
+	printf("/:\n");
 	print_directory(fp, &rootInode, superblock.blocksize);
 
 	// Close the image file.

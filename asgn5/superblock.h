@@ -32,14 +32,14 @@ typedef struct {
 	uint8_t subversion; /* filesystem sub-version */
 } Superblock;
 
-void print_superblock(Superblock *superblock);
-
 // Calculated "member datum."
 int get_first_iblock(Superblock *superblock);
 int get_zonesize(Superblock *superblock);
 int get_ptrs_per_zone(Superblock *superblock);
 int get_ino_per_block(Superblock *superblock);
 int get_wrongended(Superblock *superblock);
-int get_inode_index(Superblock *superblock, int inumber);
+
+void print_superblock(Superblock *superblock);
+int get_inode_index_for_number(Superblock *superblock, int inumber);
 
 #endif /* SUPERBLOCK_H_ */
