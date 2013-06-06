@@ -6,7 +6,6 @@
  */
 
 #include "file.h"
-#include "util.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -61,6 +60,10 @@ void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 		perror("fseek");
 		exit(-1);
 	}
+}
+
+void print_file(FILE *fp, Superblock *superblock, Inode *inode) {
+
 }
 
 void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
@@ -119,5 +122,22 @@ void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
 		perror("fseek");
 		exit(-1);
 	}
+}
+
+void find_file(FILE *fp, Superblock *superblock, char *path, int inode_number,
+		bool verbose) {
+	Inode inode = { 0 };
+
+	// Get the inode for the path given.
+	get_inode(&inode, fp, superblock, inode_number);
+
+	// If verbose, then print out the target path's inode data.
+	if (verbose) {
+		print_inode(&inode);
+	}
+
+	// Print out the root directory.
+	printf("/:\n");
+	print_directory(fp, superblock, &inode);
 }
 

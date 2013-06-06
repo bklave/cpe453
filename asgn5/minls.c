@@ -33,14 +33,38 @@
  * End useful constants.
  */
 
+static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
+		bool verbose) {
+	// Open the image file.
+	if ((fp = fopen(filename, "r")) == NULL ) {
+		perror("fopen");
+		exit(-1);
+	}
+
+	// Seek to the superblock.
+	if (fseek(fp, ONE_KILOBYTE, SEEK_SET)) {
+		perror("fseek");
+		exit(-1);
+	}
+
+	// Read the superblock.
+	fread(superblock, sizeof(Superblock), 1, fp);
+	error_check_file_pointer(fp);
+
+	// If verbose, then print the superblock's data.
+	if (verbose) {
+		print_superblock(superblock);
+	}
+
+	return fp;
+}
+
 int main(int argc, char *argv[]) {
 	FILE *fp = NULL;
 	int i = 0;
-//	char *image_filename = NULL;
-//	char *path = NULL;
+	char *image_filename = NULL, *path = NULL;
 	bool verbose = false, partition = false, subpartition = false;
 	Superblock superblock = { 0 };
-	Inode rootInode = { 0 };
 
 	for (i = 1; i < argc; i++) {
 
@@ -58,7 +82,7 @@ int main(int argc, char *argv[]) {
 				partition = true;
 
 				// Check for Subpartition flag.
-				if (i + 3 < argc && argv[i + 2][1] == 's') {
+				if ((argc > (i + 3)) && argv[i + 2][1] == 's') {
 					printf("Subpartition!\n");
 					subpartition = true;
 				}
@@ -68,34 +92,23 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	// Open the image file.
-	if ((fp = fopen(argv[argc - 1], "r")) == NULL ) {
-		perror("fopen");
-		exit(-1);
+	/* If there are three or more arguments and both the second to last
+	 * and last arguments aren't flags, then the user specified a path. */
+	if (argc > 2 && argv[argc - 2][0] != '-' && argv[argc - 1][0] != '-') {
+		image_filename = argv[argc - 2];
+		path = argv[argc - 1];
+	}
+	// Otherwise, the user didn't specify a path after all.
+	else {
+		image_filename = argv[argc - 1];
+		path = "\\";
 	}
 
-	// Seek to the superblock.
-	if (fseek(fp, ONE_KILOBYTE, SEEK_SET)) {
-		perror("fseek");
-		exit(-1);
-	}
+	// Initalize the file stream and the superblock.
+	fp = initalize(fp, &superblock, image_filename, verbose);
 
-	// Read the superblock.
-	fread(&superblock, sizeof(Superblock), 1, fp);
-	error_check_file_pointer(fp);
-
-	// Print the superblock.
-	print_superblock(&superblock);
-
-	// Get the inode for the root directory.
-	get_inode(&rootInode, fp, &superblock, 1);
-
-	// Print out the root inode.
-	print_inode(&rootInode);
-
-	// Print out the root directory.
-	printf("/:\n");
-	print_directory(fp, &superblock, &rootInode);
+	// Find and print the correct file.
+	find_file(fp, &superblock, path, 1, verbose);
 
 	// Close the image file.
 	if (fclose(fp) != 0) {

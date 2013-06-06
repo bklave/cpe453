@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include "superblock.h"
+#include "util.h"
 
 #define DIRECT_ZONES 7
 #define FILENAME_LENGTH 60
@@ -38,6 +39,9 @@ typedef struct {
 void print_inode(Inode *inode);
 void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 		int inode_number);
+void print_file(FILE *fp, Superblock *superblock, Inode *inode);
 void print_directory(FILE *fp, Superblock *superblock, Inode *inode);
+void find_file(FILE *fp, Superblock *superblock, char *path, int inode_number,
+		bool verbose);
 
 #endif /* INODE_H_ */
