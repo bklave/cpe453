@@ -9,6 +9,7 @@
 #define INODE_H_
 
 #include <stdint.h>
+#include <stdio.h>
 
 #define DIRECT_ZONES 7
 #define FILENAME_LENGTH 60
@@ -35,6 +36,6 @@ typedef struct {
 
 void print_inode(Inode *inode);
 
-void print_directory(Inode *inode);
+void print_directory(FILE *fp, Inode *inode, int blocksize);
 
 #endif /* INODE_H_ */

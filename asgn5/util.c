@@ -6,7 +6,8 @@
  */
 
 #include "util.h"
-#include <stdio.h>
+
+#include <stdlib.h>
 
 void print_minls_usage() {
 	printf("usage: ./nico_minls  [ -v ] [ -p num"
@@ -18,4 +19,12 @@ void print_minls_usage() {
 			"select partition for filesystem (default: none)");
 	printf("-h help --- print usage information and exit");
 	printf("-v verbose --- increase verbosity level");
+}
+
+void error_check_file_pointer(FILE *fp) {
+	// Check for errors on the fread().
+	if (ferror(fp)) {
+		perror("file error");
+		exit(-1);
+	}
 }

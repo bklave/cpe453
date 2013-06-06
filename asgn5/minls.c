@@ -33,13 +33,6 @@
  * End useful constants.
  */
 
-static void error_check_file_pointer(FILE *fp) {
-	// Check for errors on the fread().
-	if (ferror(fp)) {
-		perror("file error");
-		exit(-1);
-	}
-}
 
 int main(int argc, char *argv[]) {
 	FILE *fp = NULL;
@@ -47,12 +40,8 @@ int main(int argc, char *argv[]) {
 //	char *image_filename = NULL;
 //	char *path = NULL;
 	bool verbose = false, partition = false, subpartition = false;
-//	int result = 0;
 	Superblock superblock = { 0 };
 	Inode rootInode = { 0 };
-	int file_zone = 0;
-	DirectoryEntry *rootDirectoryEntries = NULL;
-	int directory_entries = 0;
 
 	for (i = 1; i < argc; i++) {
 
@@ -114,25 +103,8 @@ int main(int argc, char *argv[]) {
 	// Print out the root inode.
 	print_inode(&rootInode);
 
-	// Seek to the directory's zone.
-	file_zone = (rootInode.zone[0] * superblock.blocksize);
-	if (fseek(fp, file_zone, SEEK_SET)) {
-		perror("fseek");
-		exit(-1);
-	}
-
-	// Print the directory of the root inode.
-	directory_entries = rootInode.size / sizeof(DirectoryEntry);
-	rootDirectoryEntries = malloc(rootInode.size);
-
-	fread(rootDirectoryEntries, sizeof(DirectoryEntry), directory_entries, fp);
-	error_check_file_pointer(fp);
-
-	for (i = 0; i < directory_entries; i++) {
-		printf("Directory %d: %s\n", i, rootDirectoryEntries[i].name);
-	}
-
-	free(rootDirectoryEntries);
+	// Print out the root directory.
+	print_directory(fp, &rootInode, superblock.blocksize);
 
 	// Close the image file.
 	if (fclose(fp) != 0) {
