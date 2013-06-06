@@ -10,7 +10,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-void print_inode(Inode *inode) {
+static void print_inode(Inode *inode) {
 	int i = 0;
 
 	printf("File inode:\n");
@@ -38,7 +38,7 @@ void print_inode(Inode *inode) {
 	printf("  unsigned long  double: %d\n", inode->two_indirect);
 }
 
-void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
+static void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 		int inode_number) {
 	// Seek to the inode specified, based on the inode_number given.
 	if (fseek(fp, get_inode_index(superblock, inode_number), SEEK_SET)) {
@@ -51,18 +51,17 @@ void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 	error_check_file_pointer(fp);
 }
 
-void print_file(FILE *fp, Superblock *superblock, Inode *file_inode) {
-
-}
-
-void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
-	int first_zone_file_pointer = 0;
-	int num_directories = 0;
-	int i = 0;
+/**
+ * Returns a dynamic array of DirectoryEntries. Caller is responsible
+ * for freeing these.
+ */
+static DirectoryEntry *get_directory_entries(FILE *fp, Superblock *superblock,
+		Inode *directory_inode, int *num_directories) {
 	DirectoryEntry *directory_entries = NULL;
-	Inode temp_inode = { 0 };
+	int first_zone_file_pointer = 0;
 
-	// Point the file pointer to the directory of the first zone indexed by this inode.
+	// Point the file pointer to the DirectoryEntries inside the first
+	// zone that is indexed by this inode.
 	first_zone_file_pointer =
 			(directory_inode->zone[0] * superblock->blocksize);
 	if (fseek(fp, first_zone_file_pointer, SEEK_SET)) {
@@ -74,9 +73,27 @@ void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
 	directory_entries = malloc(directory_inode->size);
 
 	// Copy the DirectoryEntry objects from the FILE *, into memory.
-	num_directories = directory_inode->size / sizeof(DirectoryEntry);
-	fread(directory_entries, sizeof(DirectoryEntry), num_directories, fp);
+	*num_directories = directory_inode->size / sizeof(DirectoryEntry);
+	fread(directory_entries, sizeof(DirectoryEntry), *num_directories, fp);
 	error_check_file_pointer(fp);
+
+	return directory_entries;
+}
+
+static void print_file(FILE *fp, Superblock *superblock, Inode *file_inode) {
+
+}
+
+static void print_directory(FILE *fp, Superblock *superblock,
+		Inode *directory_inode) {
+	DirectoryEntry *directory_entries = NULL;
+	Inode temp_inode = { 0 };
+	int num_directories = 0;
+	int i = 0;
+
+	// Get the DirectoryEntries for this directory.
+	directory_entries = get_directory_entries(fp, superblock, directory_inode,
+			&num_directories);
 
 	// Print out the names of the DirectoryEntries.
 	for (i = 0; i < num_directories; i++) {
@@ -98,25 +115,56 @@ void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
 		printf(", %d, %s\n", temp_inode.size, directory_entries[i].filename);
 	}
 
-	// Free the memory we allocated.
+	// Free the DirectoryEntries we allocated.
 	free(directory_entries);
 }
 
-void find_file(FILE *fp, Superblock *superblock, char *path, int inode_number,
-		bool verbose) {
+void find_file(FILE *fp, Superblock *superblock, char *requested_path,
+		char *current_path, int inode_number, bool verbose) {
 	Inode inode = { 0 };
 
 	// Get the inode for the inode_number given.
 	get_inode(&inode, fp, superblock, inode_number);
 
-	// If verbose, then print out the target path's inode data.
-	if (verbose) {
-		print_inode(&inode);
+	// If this inode's file is a directory, then print_directory.
+	if (inode.mode & DIRECTORY) {
+		// If the path that we're on right now is the one that was
+		// requested by the user, then we're good. Print the directory.
+		if (strcmp(requested_path, current_path) == 0) {
+			if (verbose) {
+				print_inode(&inode);
+			}
+
+			printf("/:\n");
+			print_directory(fp, superblock, &inode);
+			return;
+		}
+		// Otherwise, traverse down this directory
+		else {
+			printf("Need to traverse down this directory...\n");
+			return;
+		}
+
+	}
+	// Otherwise, it's a file.
+	else {
+		// If the path that we're on right now is the one that was
+		// requested by the user, then we're good. Print the file.
+		if (strcmp(requested_path, current_path) == 0) {
+			if (verbose) {
+				print_inode(&inode);
+			}
+			printf("/:\n");
+			print_file(fp, superblock, &inode);
+			return;
+		}
+		// Otherwise, we stopped on a file and it wasn't the one the user
+		// requested. Exit failure here.
+		else {
+			fprintf(stderr, "No file %s found\n", requested_path);
+			return;
+		}
 	}
 
-	// Assume you found the inode for the correct path. Assume that this
-	// inode is a directory. Print it out as a directory.
-	printf("/:\n");
-	print_directory(fp, superblock, &inode);
 }
 

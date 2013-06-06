@@ -100,16 +100,16 @@ int main(int argc, char *argv[]) {
 	// Otherwise, the user didn't specify a path after all.
 	else {
 		image_filename = argv[argc - 1];
-		path = "\\";
+		path = "/";
 	}
 
-	// Initalize the file stream and the superblock.
+	// Open and initalize the image. Initialize the superblock.
 	fp = initalize(fp, &superblock, image_filename, verbose);
 
-	// Find and print the correct file.
-	find_file(fp, &superblock, path, 1, verbose);
+	// Find and print the correct file/directory.
+	find_file(fp, &superblock, path, "/", 1, verbose);
 
-	// Close the image file.
+	// Close the image.
 	if (fclose(fp) != 0) {
 		perror("fclose");
 		exit(-1);

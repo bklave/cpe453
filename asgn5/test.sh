@@ -9,12 +9,12 @@ make
 echo ""
 
 echo "minls"
-./minls -v $IMAGE
+./minls $IMAGE
 echo ""
 
-#echo "minls -v"
-#./minls -v $IMAGE
-#echo ""
+echo "minls /Hello"
+./minls $IMAGE /Hello
+echo ""
 
 #echo "minls -p"
 #./minls -p $IMAGE

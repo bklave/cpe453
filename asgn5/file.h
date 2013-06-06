@@ -36,12 +36,7 @@ typedef struct {
 	unsigned char filename[FILENAME_LENGTH]; /* filename string */
 } DirectoryEntry;
 
-void print_inode(Inode *file_inode);
-void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
-		int inode_number);
-void print_file(FILE *fp, Superblock *superblock, Inode *file_inode);
-void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode);
-void find_file(FILE *fp, Superblock *superblock, char *path, int inode_number,
-		bool verbose);
+void find_file(FILE *fp, Superblock *superblock, char *requested_path,
+		char *current_path, int inode_number, bool verbose);
 
 #endif /* INODE_H_ */
