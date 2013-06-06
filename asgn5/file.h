@@ -32,8 +32,8 @@ typedef struct {
 } Inode;
 
 typedef struct {
-	uint32_t inode; /* inode nubmer */
-	unsigned char name[FILENAME_LENGTH]; /* filename string */
+	uint32_t inode_number; /* inode nubmer */
+	unsigned char filename[FILENAME_LENGTH]; /* filename string */
 } DirectoryEntry;
 
 void print_inode(Inode *file_inode);

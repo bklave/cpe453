@@ -8,6 +8,7 @@
 #include "file.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void print_inode(Inode *inode) {
 	int i = 0;
@@ -39,13 +40,13 @@ void print_inode(Inode *inode) {
 
 void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 		int inode_number) {
-	// Seek to the root inode in the system.
+	// Seek to the inode specified, based on the inode_number given.
 	if (fseek(fp, get_inode_index(superblock, inode_number), SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
 
-	// Read that root inode.
+	// Read that inode into our struct.
 	fread(inode_to_get, sizeof(Inode), 1, fp);
 	error_check_file_pointer(fp);
 }
@@ -79,21 +80,22 @@ void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
 
 	// Print out the names of the DirectoryEntries.
 	for (i = 0; i < num_directories; i++) {
+		// Clear out temp_inode.
+		memset(&temp_inode, 0, sizeof(Inode));
 
-		/* "A DirectoryEntry with an inode of 0 is a file marked as
+		/* "A DirectoryEntry with an inode_number of 0 is a file marked as
 		 deleted. It is not a valid entry." */
-		if (directory_entries[i].inode == 0) {
+		if (directory_entries[i].inode_number == 0) {
 			continue;
 		}
 
 		// Retrieve this particular DirectoryEntry's inode.
-		get_inode(&temp_inode, fp, superblock, directory_entries[i].inode);
-
-		// Print this DirectoryEntry's permission string.
+		get_inode(&temp_inode, fp, superblock,
+				directory_entries[i].inode_number);
 		print_permissions_string(temp_inode.mode);
 
 		// Print out the data for this DirectoryEntry.
-		printf(", %d, %s\n", temp_inode.size, directory_entries[i].name);
+		printf(", %d, %s\n", temp_inode.size, directory_entries[i].filename);
 	}
 
 	// Free the memory we allocated.

@@ -8,6 +8,7 @@
 #include "superblock.h"
 #include <stdio.h>
 #include "util.h"
+#include "file.h"
 
 void print_superblock(Superblock *superblock) {
 	printf("Superblock Contents:\n");
@@ -51,8 +52,12 @@ int get_wrongended(Superblock *superblock) {
 }
 
 int get_inode_index(Superblock *superblock, int inode_number) {
-	const int inode_index = inode_number - 1;
+	int inode_index = inode_number - 1;
 
-	return (2 + superblock->i_blocks + superblock->z_blocks + inode_index)
-			* superblock->blocksize;
+	int two_blocks = 2 * superblock->blocksize;
+	int b_imap = superblock->i_blocks * superblock->blocksize;
+	int b_zmap = superblock->z_blocks * superblock->blocksize;
+	int b_inodes = inode_index * sizeof(Inode);
+
+	return two_blocks + b_imap + b_zmap + b_inodes;
 }
