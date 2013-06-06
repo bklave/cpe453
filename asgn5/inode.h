@@ -11,6 +11,7 @@
 #include <stdint.h>
 
 #define DIRECT_ZONES 7
+#define FILENAME_LENGTH 60
 
 typedef struct {
 	uint16_t mode; /* mode */
@@ -27,6 +28,13 @@ typedef struct {
 	uint32_t unused;
 } Inode;
 
+typedef struct {
+	uint32_t inode; /* inode nubmer */
+	unsigned char name[FILENAME_LENGTH]; /* filename string */
+} DirectoryEntry;
+
 void print_inode(Inode *inode);
+
+void print_directory(Inode *inode);
 
 #endif /* INODE_H_ */

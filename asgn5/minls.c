@@ -33,6 +33,14 @@
  * End useful constants.
  */
 
+static void error_check_file_pointer(FILE *fp) {
+	// Check for errors on the fread().
+	if (ferror(fp)) {
+		perror("file error");
+		exit(-1);
+	}
+}
+
 int main(int argc, char *argv[]) {
 	FILE *fp = NULL;
 	int i = 0;
@@ -41,7 +49,10 @@ int main(int argc, char *argv[]) {
 	bool verbose = false, partition = false, subpartition = false;
 //	int result = 0;
 	Superblock superblock = { 0 };
-	Inode firstInode = { 0 };
+	Inode rootInode = { 0 };
+	int file_zone = 0;
+	DirectoryEntry *rootDirectoryEntries = NULL;
+	int directory_entries = 0;
 
 	for (i = 1; i < argc; i++) {
 
@@ -83,33 +94,45 @@ int main(int argc, char *argv[]) {
 
 	// Read the superblock.
 	fread(&superblock, sizeof(Superblock), 1, fp);
-
-	// Check for errors on the fread().
-	if (ferror(fp)) {
-		perror("file error");
-		exit(-1);
-	}
+	error_check_file_pointer(fp);
 
 	// Print the superblock.
 	print_superblock(&superblock);
 
-	// Seek to the first inode in the system?
-	if (fseek(fp, get_inode_start_block(&superblock), SEEK_SET)) {
+	// Seek to the root inode in the system.
+	printf("Root inode at index %d\n", get_inode_index(&superblock, 1));
+
+	if (fseek(fp, get_inode_index(&superblock, 1), SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
 
-	// Read the first inode?
-	fread(&firstInode, sizeof(Inode), 1, fp);
+	// Read that root inode.
+	fread(&rootInode, sizeof(Inode), 1, fp);
+	error_check_file_pointer(fp);
 
-	// Check for errors on the fread()?
-	if (ferror(fp)) {
-		perror("file error");
+	// Print out the root inode.
+	print_inode(&rootInode);
+
+	// Seek to the directory's zone.
+	file_zone = (rootInode.zone[0] * superblock.blocksize);
+	if (fseek(fp, file_zone, SEEK_SET)) {
+		perror("fseek");
 		exit(-1);
 	}
 
-	// Print out the first inode?
-	print_inode(&firstInode);
+	// Print the directory of the root inode.
+	directory_entries = rootInode.size / sizeof(DirectoryEntry);
+	rootDirectoryEntries = malloc(rootInode.size);
+
+	fread(rootDirectoryEntries, sizeof(DirectoryEntry), directory_entries, fp);
+	error_check_file_pointer(fp);
+
+	for (i = 0; i < directory_entries; i++) {
+		printf("Directory %d: %s\n", i, rootDirectoryEntries[i].name);
+	}
+
+	free(rootDirectoryEntries);
 
 	// Close the image file.
 	if (fclose(fp) != 0) {

@@ -40,6 +40,6 @@ int get_zonesize(Superblock *superblock);
 int get_ptrs_per_zone(Superblock *superblock);
 int get_ino_per_block(Superblock *superblock);
 int get_wrongended(Superblock *superblock);
-int get_inode_start_block(Superblock *superblock);
+int get_inode_index(Superblock *superblock, int inumber);
 
 #endif /* SUPERBLOCK_H_ */
