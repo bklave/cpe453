@@ -116,14 +116,6 @@ static void print_directory(FILE *fp, Superblock *superblock,
 
 		print_file(fp, superblock, directory_entries[i].inode_number,
 				directory_entries[i].filename);
-
-//		// Retrieve this particular DirectoryEntry's inode.
-//		get_inode(&temp_inode, fp, superblock,
-//				directory_entries[i].inode_number);
-//		print_permissions_string(temp_inode.mode);
-//
-//		// Print out the data for this DirectoryEntry.
-//		printf(", %d, %s\n", temp_inode.size, directory_entries[i].filename);
 	}
 
 	// Free the DirectoryEntries we allocated.
@@ -141,6 +133,7 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 	int i = 0;
 	char *parsed_token = NULL;
 	char new_path[60] = { '\0' };
+	char requested_path_copy[60] = { '\0' };
 
 	// Get the inode for the inode_number given.
 	get_inode(&inode, fp, superblock, inode_number);
@@ -154,8 +147,8 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			if (verbose) {
 				print_inode(&inode);
 			}
-			printf("%s:\n", requested_path);
 
+			printf("%s:\n", requested_path);
 			print_file(fp, superblock, inode_number, requested_path);
 
 			return;
@@ -188,6 +181,9 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			printf("Traversing down directory %s to try and match %s...\n",
 					current_path, requested_path);
 
+			// Copy requested_path
+			strcpy(requested_path_copy, requested_path);
+
 			// Truncate your requested_path by one directory.
 			parsed_token = strtok(requested_path, "/");
 
@@ -205,8 +201,19 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 					strcpy(new_path, current_path);
 					strcat(new_path, parsed_token);
 
+					while (parsed_token != NULL ) {
+						parsed_token = strtok(NULL, "/");
+
+						if (parsed_token != NULL ) {
+							strcat(new_path, "/");
+							strcat(new_path, parsed_token);
+						}
+					}
+
+					printf("Recursing with new_path: %s\n", new_path);
+
 					// Make a recursive call with the udpated path.
-					find_file(fp, superblock, requested_path, new_path,
+					find_file(fp, superblock, requested_path_copy, new_path,
 							directory_entries[i].inode_number, verbose);
 					return;
 				}
