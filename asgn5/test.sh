@@ -9,7 +9,7 @@ make
 echo ""
 
 echo "minls"
-./minls $IMAGE
+./minls -v $IMAGE
 echo ""
 
 #echo "minls -v"

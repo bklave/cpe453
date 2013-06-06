@@ -36,11 +36,11 @@ typedef struct {
 	unsigned char name[FILENAME_LENGTH]; /* filename string */
 } DirectoryEntry;
 
-void print_inode(Inode *inode);
+void print_inode(Inode *file_inode);
 void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
 		int inode_number);
-void print_file(FILE *fp, Superblock *superblock, Inode *inode);
-void print_directory(FILE *fp, Superblock *superblock, Inode *inode);
+void print_file(FILE *fp, Superblock *superblock, Inode *file_inode);
+void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode);
 void find_file(FILE *fp, Superblock *superblock, char *path, int inode_number,
 		bool verbose);
 

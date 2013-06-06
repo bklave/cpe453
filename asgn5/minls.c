@@ -74,7 +74,6 @@ int main(int argc, char *argv[]) {
 			// Use the next character to decide what to do.
 			switch (argv[i][1]) {
 			case 'v':
-				printf("Verbose!\n");
 				verbose = true;
 				break;
 			case 'p':

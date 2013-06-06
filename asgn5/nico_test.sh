@@ -1,1 +1,1 @@
-./minls_nico images/TestImage /
+./minls_nico -v images/TestImage /
