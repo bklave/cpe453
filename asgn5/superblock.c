@@ -50,7 +50,7 @@ int get_wrongended(Superblock *superblock) {
 	return 0;
 }
 
-int get_inode_index_for_number(Superblock *superblock, int inode_number) {
+int get_inode_index(Superblock *superblock, int inode_number) {
 	const int inode_index = inode_number - 1;
 
 	return (2 + superblock->i_blocks + superblock->z_blocks + inode_index)

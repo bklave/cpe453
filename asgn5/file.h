@@ -36,7 +36,8 @@ typedef struct {
 } DirectoryEntry;
 
 void print_inode(Inode *inode);
-void print_directory(FILE *fp, Inode *inode, int blocksize);
-Inode get_inode(FILE *fp, Superblock *superblock, int inode_number);
+void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
+		int inode_number);
+void print_directory(FILE *fp, Superblock *superblock, Inode *inode);
 
 #endif /* INODE_H_ */

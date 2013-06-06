@@ -40,6 +40,6 @@ int get_ino_per_block(Superblock *superblock);
 int get_wrongended(Superblock *superblock);
 
 void print_superblock(Superblock *superblock);
-int get_inode_index_for_number(Superblock *superblock, int inumber);
+int get_inode_index(Superblock *superblock, int inode_number);
 
 #endif /* SUPERBLOCK_H_ */

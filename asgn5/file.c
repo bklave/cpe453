@@ -36,12 +36,9 @@ void print_inode(Inode *inode) {
 	printf("  unsigned long  double: %d\n", inode->two_indirect);
 }
 
-void print_directory(FILE *fp, Inode *inode, int blocksize) {
-	long original_file_position = 0;
-	int directory_zone = 0;
-	int num_directories = 0;
-	int i = 0;
-	DirectoryEntry *directoryEntries = NULL;
+void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
+		int inode_number) {
+	int original_file_position = 0;
 
 	// Read the current file position.
 	if ((original_file_position = ftell(fp)) == -1) {
@@ -49,27 +46,69 @@ void print_directory(FILE *fp, Inode *inode, int blocksize) {
 		exit(-1);
 	}
 
-	// Seek to the directory's zone.
-	directory_zone = (inode->zone[0] * blocksize);
-	if (fseek(fp, directory_zone, SEEK_SET)) {
+	// Seek to the root inode in the system.
+	if (fseek(fp, get_inode_index(superblock, inode_number), SEEK_SET)) {
+		perror("fseek");
+		exit(-1);
+	}
+
+	// Read that root inode.
+	fread(inode_to_get, sizeof(Inode), 1, fp);
+	error_check_file_pointer(fp);
+
+	// Set the file position to go back to where it was before.
+	if (fseek(fp, original_file_position, SEEK_SET)) {
+		perror("fseek");
+		exit(-1);
+	}
+}
+
+void print_directory(FILE *fp, Superblock *superblock, Inode *directory_inode) {
+	long original_file_position = 0;
+	int directory_file_pointer = 0;
+	int num_directories = 0;
+	int i = 0;
+	DirectoryEntry *directoryEntries = NULL;
+	Inode temp_inode = { 0 };
+
+	// Read the current file position.
+	if ((original_file_position = ftell(fp)) == -1) {
+		perror("ftell");
+		exit(-1);
+	}
+
+	// Seek to the directory.
+	directory_file_pointer = (directory_inode->zone[0] * superblock->blocksize);
+	if (fseek(fp, directory_file_pointer, SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
 
 	// Allocate memory for the DirectoryEntry objects we're about to copy.
-	directoryEntries = malloc(inode->size);
+	directoryEntries = malloc(directory_inode->size);
 
-	// Copy the DirectoryEntry objects from the FILE * and into memory.
-	num_directories = inode->size / sizeof(DirectoryEntry);
+	// Copy the DirectoryEntry objects from the FILE *, into memory.
+	num_directories = directory_inode->size / sizeof(DirectoryEntry);
 	fread(directoryEntries, sizeof(DirectoryEntry), num_directories, fp);
 	error_check_file_pointer(fp);
 
 	// Print out the names of the directories.
 	for (i = 0; i < num_directories; i++) {
-		// TODO: Retrieve the file's inode here to print its
-		// size and permissions.
 
-		printf("PERMISSIONS, SIZE, %s\n", directoryEntries[i].name);
+		/* "A directory entry with an inode of 0 is a Þle marked as
+		 deleted. It is not a valid entry. */
+		if (directoryEntries[i].inode == 0) {
+			continue;
+		}
+
+		// Retrieve this particular file's inode.
+		get_inode(&temp_inode, fp, superblock, directoryEntries[i].inode);
+
+		// Print its permission string.
+		print_permissions_string(temp_inode.mode);
+
+		// Print out the data for this file.
+		printf(", %d, %s\n", temp_inode.size, directoryEntries[i].name);
 	}
 
 	// Free the memory we allocated.
@@ -82,31 +121,3 @@ void print_directory(FILE *fp, Inode *inode, int blocksize) {
 	}
 }
 
-Inode get_inode(FILE *fp, Superblock *superblock, int inode_number) {
-	Inode inode = { 0 };
-	int original_file_position = 0;
-
-	// Read the current file position.
-	if ((original_file_position = ftell(fp)) == -1) {
-		perror("ftell");
-		exit(-1);
-	}
-
-	// Seek to the root inode in the system.
-	if (fseek(fp, get_inode_index_for_number(superblock, 1), SEEK_SET)) {
-		perror("fseek");
-		exit(-1);
-	}
-
-	// Read that root inode.
-	fread(&inode, sizeof(Inode), 1, fp);
-	error_check_file_pointer(fp);
-
-	// Set the file position to go back to where it was before.
-	if (fseek(fp, original_file_position, SEEK_SET)) {
-		perror("fseek");
-		exit(-1);
-	}
-
-	return inode;
-}

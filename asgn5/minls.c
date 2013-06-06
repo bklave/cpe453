@@ -88,14 +88,14 @@ int main(int argc, char *argv[]) {
 	print_superblock(&superblock);
 
 	// Get the inode for the root directory.
-	rootInode = get_inode(fp, &superblock, 1);
+	get_inode(&rootInode, fp, &superblock, 1);
 
 	// Print out the root inode.
 	print_inode(&rootInode);
 
 	// Print out the root directory.
 	printf("/:\n");
-	print_directory(fp, &rootInode, superblock.blocksize);
+	print_directory(fp, &superblock, &rootInode);
 
 	// Close the image file.
 	if (fclose(fp) != 0) {
