@@ -137,9 +137,6 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 
 	// Get the inode for the inode_number given.
 	get_inode(&inode, fp, superblock, inode_number);
-//	printf("Top of find_file() with requested_path: %s and "
-//			"current_path: %s. Got inode %d\n", requested_path, current_path,
-//			inode_number);
 
 	// Base case: this is a FILE. In this case, you either found the
 	// file that was requested or you didn't.
@@ -150,8 +147,6 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			if (verbose) {
 				print_inode(&inode);
 			}
-
-//			printf("Found file for inode %d\n", inode_number);
 
 			printf("%s:\n", requested_path);
 			print_file(fp, superblock, inode_number, requested_path);
@@ -209,10 +204,6 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 							strcat(new_path, parsed_token);
 						}
 					}
-
-//					printf("Making recursive call with new_path:"
-//							" %s and inode_number: %d\n", new_path,
-//							directory_entries[i].inode_number);
 
 					// Make a recursive call with the udpated path.
 					find_file(fp, superblock, requested_path_copy, new_path,

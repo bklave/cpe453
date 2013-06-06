@@ -1,4 +1,5 @@
 IMAGE="images/TestImage"
+P_IMAGE="images/Partitioned"
 
 echo "Cleaning..."
 make clean
@@ -31,3 +32,9 @@ echo ""
 echo "minls src/system"
 ./minls $IMAGE src/system
 echo  ""
+
+
+echo "minls (partitioned)"
+./minls $P_IMAGE
+echo ""
+

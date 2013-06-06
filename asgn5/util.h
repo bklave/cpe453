@@ -10,6 +10,24 @@
 
 #include <stdio.h>
 
+/**
+ * Useful constants.
+ */
+#define PARTITION_TABLE_ADDRESS 0x1BE // location of the partition table
+#define MINIX_PARTITION_TYPE 0x81 // partition type for Minix
+#define BYTE_510 0x55 /* byte 510 of a boot sector with
+						 a valid partition table */
+#define BYTE_511 0xAA /* byte 511 of a boot sector with
+						 a valid partition table */
+#define MINIX_MAGIC_NUMBER 0x4D5A // the minix magic number
+#define MINIX_MAGIC_NUMBER_REVERSED 0x5A4D /* minix magic number on
+											  a byte-reversed Þlesystem */
+#define INODE_SIZE 64 // size of an inode in bytes
+#define DIRECTORY_ENTRY_SIZE 64 // size of a directory entry in bytes
+/*
+ * End useful constants.
+ */
+
 /*
  * File type bitmasks.
  */

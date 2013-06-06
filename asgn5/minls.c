@@ -16,24 +16,6 @@
 #include "file.h"
 #include "util.h"
 
-/**
- * Useful constants.
- */
-#define PARTITION_TABLE_ADDRESS 0x1BE // location of the partition table
-#define MINIX_PARTITION_TYPE 0x81 // partition type for Minix
-#define BYTE_510 0x55 /* byte 510 of a boot sector with
-						 a valid partition table */
-#define BYTE_511 0xAA /* byte 511 of a boot sector with
-						 a valid partition table */
-#define MINIX_MAGIC_NUMBER 0x4D5A // the minix magic number
-#define MINIX_MAGIC_NUMBER_REVERSED 0x5A4D /* minix magic number on
-											  a byte-reversed Þlesystem */
-#define INODE_SIZE 64 // size of an inode in bytes
-#define DIRECTORY_ENTRY_SIZE 64 // size of a directory entry in bytes
-/*
- * End useful constants.
- */
-
 static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
 		bool verbose) {
 	// Open the image file.
@@ -51,6 +33,13 @@ static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
 	// Read the superblock.
 	fread(superblock, sizeof(Superblock), 1, fp);
 	error_check_file_pointer(fp);
+
+	// Sanity check on the superblock's magic number.
+	if (superblock->magic != MINIX_MAGIC_NUMBER) {
+		fprintf(stderr, "Bad magic number. (0x%x)\n", superblock->magic);
+		fprintf(stderr, "This doesn't look like a MINIX filesystem.\n");
+		exit(-1);
+	}
 
 	// If verbose, then print the superblock's data.
 	if (verbose) {
@@ -114,8 +103,6 @@ int main(int argc, char *argv[]) {
 		image_filename = argv[argc - 1];
 		path = "/";
 	}
-
-	printf("Path: %s\n", path);
 
 	// Open and initalize the image. Initialize the superblock.
 	fp = initalize(fp, &superblock, image_filename, verbose);
