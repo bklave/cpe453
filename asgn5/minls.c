@@ -14,18 +14,48 @@
 #include <string.h>
 #include "superblock.h"
 #include "file.h"
+#include "partition.h"
 #include "util.h"
 
 static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
-		bool verbose) {
+		bool use_partition, bool use_subpartition, bool verbose) {
+	PartitionTableEntry partition_table_entry = { 0 };
+	int partition_sector_offset = 0;
+
 	// Open the image file.
 	if ((fp = fopen(filename, "r")) == NULL ) {
 		perror("fopen");
 		exit(-1);
 	}
 
-	// Seek to the superblock.
-	if (fseek(fp, ONE_KILOBYTE, SEEK_SET)) {
+	if (use_partition) {
+		// Attempt to read the partition table, if it exists.
+		read_partition_table(&partition_table_entry, fp);
+
+		// If you do find a partition table, then offset the superblock to
+		// point to its partitioned location.
+		if (partition_table_entry.type == MINIX_PARTITION_TYPE) {
+			printf("Parition table found; first sector at %d\n",
+					partition_table_entry.lFirst);
+
+			// There's a partition table, so account for the superblock
+			// offset for later.
+			partition_sector_offset = partition_table_entry.lFirst * SECTOR_SIZE;
+		}
+		// If you want to use partitioning but the partition table wasn't
+		// found, then exit with failure.
+		else {
+			fprintf(stderr, "No partition table found\n");
+			exit(-1);
+		}
+	} else {
+		// If the user elected not to partition, then don't offset the
+		// superblock.
+		partition_sector_offset = 0;
+	}
+
+	// Seek to the superblock, offsetting for the partitition if it's there.
+	if (fseek(fp, partition_sector_offset + ONE_KILOBYTE, SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
@@ -54,7 +84,8 @@ int main(int argc, char *argv[]) {
 	int i = 0;
 	char *image_filename = NULL;
 	char *path = NULL;
-	bool verbose = false, partition = false, subpartition = false;
+	bool verbose = false, use_partition = false, use_subpartition = false;
+	int primary_partition = 0, subpartition = 0;
 	Superblock superblock = { 0 };
 	char *new_path = NULL;
 
@@ -69,13 +100,15 @@ int main(int argc, char *argv[]) {
 				verbose = true;
 				break;
 			case 'p':
-				printf("Partition!\n");
-				partition = true;
+				use_partition = true;
+				primary_partition = strtol(argv[i + 1], NULL, 10);
+				printf("Using partition: %d\n", primary_partition);
 
 				// Check for Subpartition flag.
 				if ((argc > (i + 3)) && argv[i + 2][1] == 's') {
-					printf("Subpartition!\n");
-					subpartition = true;
+					use_subpartition = true;
+					subpartition = strtol(argv[i + 3], NULL, 10);
+					printf("Using subpartition: %d\n", subpartition);
 				}
 
 				break;
@@ -105,7 +138,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Open and initalize the image. Initialize the superblock.
-	fp = initalize(fp, &superblock, image_filename, verbose);
+	fp = initalize(fp, &superblock, image_filename, use_partition,
+			use_subpartition, verbose);
 
 	// Find and print the correct file/directory.
 	find_file(fp, &superblock, path, "/", 1, verbose);

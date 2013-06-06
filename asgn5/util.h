@@ -24,6 +24,7 @@
 											  a byte-reversed Þlesystem */
 #define INODE_SIZE 64 // size of an inode in bytes
 #define DIRECTORY_ENTRY_SIZE 64 // size of a directory entry in bytes
+#define SECTOR_SIZE 512 // size of a MINIX sector in bytes.
 /*
  * End useful constants.
  */

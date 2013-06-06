@@ -223,6 +223,5 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			return;
 		}
 	}
-
 }
 
