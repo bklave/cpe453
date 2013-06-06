@@ -16,9 +16,13 @@ echo "minls /Hello"
 ./minls $IMAGE /Hello
 echo ""
 
-echo "minls /Hello/src"
-./minls $IMAGE /Hello/src
+echo "minls /src"
+./minls $IMAGE /src
 echo ""
 
+echo "minls /"
+./minls $IMAGE /
+echo ""
 
+echo "minsls"
 

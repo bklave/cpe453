@@ -137,6 +137,9 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 
 	// Get the inode for the inode_number given.
 	get_inode(&inode, fp, superblock, inode_number);
+//	printf("Top of find_file() with requested_path: %s and "
+//			"current_path: %s. Got inode %d\n", requested_path, current_path,
+//			inode_number);
 
 	// Base case: this is a FILE. In this case, you either found the
 	// file that was requested or you didn't.
@@ -147,6 +150,8 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			if (verbose) {
 				print_inode(&inode);
 			}
+
+//			printf("Found file for inode %d\n", inode_number);
 
 			printf("%s:\n", requested_path);
 			print_file(fp, superblock, inode_number, requested_path);
@@ -178,10 +183,7 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 		}
 		// Otherwise, traverse down this directory.
 		else {
-			printf("Traversing down directory %s to try and match %s...\n",
-					current_path, requested_path);
-
-			// Copy requested_path
+			// Copy requested_path before you start truncating it.
 			strcpy(requested_path_copy, requested_path);
 
 			// Truncate your requested_path by one directory.
@@ -195,8 +197,6 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			// direction that we want to go.
 			for (i = 0; i < num_directories; i++) {
 				if (strcmp(parsed_token, directory_entries[i].filename) == 0) {
-					printf("Found filename match: %s\n", parsed_token);
-
 					// Add the parsed token to the current_path.
 					strcpy(new_path, current_path);
 					strcat(new_path, parsed_token);
@@ -210,14 +210,17 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 						}
 					}
 
-					printf("Recursing with new_path: %s\n", new_path);
+//					printf("Making recursive call with new_path:"
+//							" %s and inode_number: %d\n", new_path,
+//							directory_entries[i].inode_number);
 
 					// Make a recursive call with the udpated path.
 					find_file(fp, superblock, requested_path_copy, new_path,
 							directory_entries[i].inode_number, verbose);
+
+					free(directory_entries);
 					return;
 				}
-
 			}
 
 			// If you process each DirectoryEntry without finding the one
@@ -225,6 +228,7 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			// failure.
 			fprintf(stderr, "No file/directory %s found within directory %s\n",
 					requested_path, current_path);
+			free(directory_entries);
 			return;
 		}
 	}
