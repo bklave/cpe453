@@ -62,7 +62,8 @@ static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
 int main(int argc, char *argv[]) {
 	FILE *fp = NULL;
 	int i = 0;
-	char *image_filename = NULL, *path = NULL;
+	char *image_filename = NULL;
+	char *path = NULL;
 	bool verbose = false, partition = false, subpartition = false;
 	Superblock superblock = { 0 };
 

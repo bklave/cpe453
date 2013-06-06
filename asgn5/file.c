@@ -80,8 +80,16 @@ static DirectoryEntry *get_directory_entries(FILE *fp, Superblock *superblock,
 	return directory_entries;
 }
 
-static void print_file(FILE *fp, Superblock *superblock, Inode *file_inode) {
+static void print_file(FILE *fp, Superblock *superblock, int inode_number,
+		char *filename) {
+	Inode temp_inode = { 0 };
 
+	// Retrieve this particular DirectoryEntry's inode.
+	get_inode(&temp_inode, fp, superblock, inode_number);
+	print_permissions_string(temp_inode.mode);
+
+	// Print out the data for this DirectoryEntry.
+	printf(", %d, %s\n", temp_inode.size, filename);
 }
 
 static void print_directory(FILE *fp, Superblock *superblock,
@@ -106,62 +114,110 @@ static void print_directory(FILE *fp, Superblock *superblock,
 			continue;
 		}
 
-		// Retrieve this particular DirectoryEntry's inode.
-		get_inode(&temp_inode, fp, superblock,
-				directory_entries[i].inode_number);
-		print_permissions_string(temp_inode.mode);
+		print_file(fp, superblock, directory_entries[i].inode_number,
+				directory_entries[i].filename);
 
-		// Print out the data for this DirectoryEntry.
-		printf(", %d, %s\n", temp_inode.size, directory_entries[i].filename);
+//		// Retrieve this particular DirectoryEntry's inode.
+//		get_inode(&temp_inode, fp, superblock,
+//				directory_entries[i].inode_number);
+//		print_permissions_string(temp_inode.mode);
+//
+//		// Print out the data for this DirectoryEntry.
+//		printf(", %d, %s\n", temp_inode.size, directory_entries[i].filename);
 	}
 
 	// Free the DirectoryEntries we allocated.
 	free(directory_entries);
 }
 
+/*
+ * Recursive function. Bulk of the logic is here.
+ */
 void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 		char *current_path, int inode_number, bool verbose) {
 	Inode inode = { 0 };
+	DirectoryEntry *directory_entries = NULL;
+	int num_directories = 0;
+	int i = 0;
+	char *parsed_token = NULL;
+	char new_path[60] = { '\0' };
 
 	// Get the inode for the inode_number given.
 	get_inode(&inode, fp, superblock, inode_number);
 
-	// If this inode's file is a directory, then print_directory.
-	if (inode.mode & DIRECTORY) {
-		// If the path that we're on right now is the one that was
-		// requested by the user, then we're good. Print the directory.
-		if (strcmp(requested_path, current_path) == 0) {
-			if (verbose) {
-				print_inode(&inode);
-			}
-
-			printf("/:\n");
-			print_directory(fp, superblock, &inode);
-			return;
-		}
-		// Otherwise, traverse down this directory
-		else {
-			printf("Need to traverse down this directory...\n");
-			return;
-		}
-
-	}
-	// Otherwise, it's a file.
-	else {
+	// Base case: this is a FILE. In this case, you either found the
+	// file that was requested or you didn't.
+	if ((inode.mode & DIRECTORY) == 0) {
 		// If the path that we're on right now is the one that was
 		// requested by the user, then we're good. Print the file.
 		if (strcmp(requested_path, current_path) == 0) {
 			if (verbose) {
 				print_inode(&inode);
 			}
-			printf("/:\n");
-			print_file(fp, superblock, &inode);
+			printf("%s:\n", requested_path);
+
+			print_file(fp, superblock, inode_number, requested_path);
+
 			return;
 		}
 		// Otherwise, we stopped on a file and it wasn't the one the user
 		// requested. Exit failure here.
 		else {
-			fprintf(stderr, "No file %s found\n", requested_path);
+			fprintf(stderr,
+					"Couldn't find file with current path %s: %s requested\n",
+					current_path, requested_path);
+			return;
+		}
+	}
+	// Otherwise, this is a DIRECTORY.
+	else {
+		// If the path that we're on right now is the one that was
+		// requested by the user, then we're good. Print the directory
+		// and return.
+		if (strcmp(requested_path, current_path) == 0) {
+			if (verbose) {
+				print_inode(&inode);
+			}
+
+			printf("%s:\n", requested_path);
+			print_directory(fp, superblock, &inode);
+			return;
+		}
+		// Otherwise, traverse down this directory.
+		else {
+			printf("Traversing down directory %s to try and match %s...\n",
+					current_path, requested_path);
+
+			// Truncate your requested_path by one directory.
+			parsed_token = strtok(requested_path, "/");
+
+			// Grab each of the DirectoryEntries in this directtory.
+			directory_entries = get_directory_entries(fp, superblock, &inode,
+					&num_directories);
+
+			// Find the DirectoryEntry that points in the directory
+			// direction that we want to go.
+			for (i = 0; i < num_directories; i++) {
+				if (strcmp(parsed_token, directory_entries[i].filename) == 0) {
+					printf("Found filename match: %s\n", parsed_token);
+
+					// Add the parsed token to the current_path.
+					strcpy(new_path, current_path);
+					strcat(new_path, parsed_token);
+
+					// Make a recursive call with the udpated path.
+					find_file(fp, superblock, requested_path, new_path,
+							directory_entries[i].inode_number, verbose);
+					return;
+				}
+
+			}
+
+			// If you process each DirectoryEntry without finding the one
+			// that corresponds to the requested filename, then return
+			// failure.
+			fprintf(stderr, "No file/directory %s found within directory %s\n",
+					requested_path, current_path);
 			return;
 		}
 	}
