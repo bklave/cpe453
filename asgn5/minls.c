@@ -17,10 +17,10 @@
 #include "partition.h"
 #include "util.h"
 
-static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
-		bool use_partition, bool use_subpartition, bool verbose) {
+static FILE *initalize(FILE *fp, Superblock *superblock,
+		int *partition_sector_offset, char *filename, bool use_partition,
+		bool use_subpartition, bool verbose) {
 	PartitionTableEntry partition_table_entry = { 0 };
-	int partition_sector_offset = 0;
 
 	// Open the image file.
 	if ((fp = fopen(filename, "r")) == NULL ) {
@@ -40,7 +40,8 @@ static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
 
 			// There's a partition table, so account for the superblock
 			// offset for later.
-			partition_sector_offset = partition_table_entry.lFirst * SECTOR_SIZE;
+			*partition_sector_offset = partition_table_entry.lFirst
+					* SECTOR_SIZE;
 		}
 		// If you want to use partitioning but the partition table wasn't
 		// found, then exit with failure.
@@ -51,11 +52,11 @@ static FILE *initalize(FILE *fp, Superblock *superblock, char *filename,
 	} else {
 		// If the user elected not to partition, then don't offset the
 		// superblock.
-		partition_sector_offset = 0;
+		*partition_sector_offset = 0;
 	}
 
 	// Seek to the superblock, offsetting for the partitition if it's there.
-	if (fseek(fp, partition_sector_offset + ONE_KILOBYTE, SEEK_SET)) {
+	if (fseek(fp, *partition_sector_offset + ONE_KILOBYTE, SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
@@ -88,6 +89,7 @@ int main(int argc, char *argv[]) {
 	int primary_partition = 0, subpartition = 0;
 	Superblock superblock = { 0 };
 	char *new_path = NULL;
+	int partition_sector_offset = 0;
 
 	for (i = 1; i < argc; i++) {
 
@@ -138,11 +140,11 @@ int main(int argc, char *argv[]) {
 	}
 
 	// Open and initalize the image. Initialize the superblock.
-	fp = initalize(fp, &superblock, image_filename, use_partition,
-			use_subpartition, verbose);
+	fp = initalize(fp, &superblock, &partition_sector_offset, image_filename,
+			use_partition, use_subpartition, verbose);
 
 	// Find and print the correct file/directory.
-	find_file(fp, &superblock, path, "/", 1, verbose);
+	find_file(fp, &superblock, partition_sector_offset, path, "/", 1, verbose);
 
 	// If you had to malloc a new_path, then free it.
 	if (new_path != NULL ) {

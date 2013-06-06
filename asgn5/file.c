@@ -39,9 +39,11 @@ static void print_inode(Inode *inode) {
 }
 
 static void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
-		int inode_number) {
+		int partition_sector_offset, int inode_number) {
 	// Seek to the inode specified, based on the inode_number given.
-	if (fseek(fp, get_inode_index(superblock, inode_number), SEEK_SET)) {
+	if (fseek(fp,
+			get_inode_index(superblock, inode_number) + partition_sector_offset,
+			SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
@@ -56,7 +58,8 @@ static void get_inode(Inode *inode_to_get, FILE *fp, Superblock *superblock,
  * for freeing these.
  */
 static DirectoryEntry *get_directory_entries(FILE *fp, Superblock *superblock,
-		Inode *directory_inode, int *num_directories) {
+		int partition_sector_offset, Inode *directory_inode,
+		int *num_directories) {
 	DirectoryEntry *directory_entries = NULL;
 	int first_zone_file_pointer = 0;
 
@@ -64,7 +67,8 @@ static DirectoryEntry *get_directory_entries(FILE *fp, Superblock *superblock,
 	// zone that is indexed by this inode.
 	first_zone_file_pointer =
 			(directory_inode->zone[0] * superblock->blocksize);
-	if (fseek(fp, first_zone_file_pointer, SEEK_SET)) {
+	if (fseek(fp, first_zone_file_pointer + partition_sector_offset,
+			SEEK_SET)) {
 		perror("fseek");
 		exit(-1);
 	}
@@ -80,12 +84,13 @@ static DirectoryEntry *get_directory_entries(FILE *fp, Superblock *superblock,
 	return directory_entries;
 }
 
-static void print_file(FILE *fp, Superblock *superblock, int inode_number,
-		char *filename) {
+static void print_file(FILE *fp, Superblock *superblock,
+		int partition_sector_offset, int inode_number, char *filename) {
 	Inode temp_inode = { 0 };
 
 	// Retrieve this particular DirectoryEntry's inode.
-	get_inode(&temp_inode, fp, superblock, inode_number);
+	get_inode(&temp_inode, fp, superblock, partition_sector_offset,
+			inode_number);
 	print_permissions_string(temp_inode.mode);
 
 	// Print out the data for this DirectoryEntry.
@@ -93,15 +98,15 @@ static void print_file(FILE *fp, Superblock *superblock, int inode_number,
 }
 
 static void print_directory(FILE *fp, Superblock *superblock,
-		Inode *directory_inode) {
+		int partition_sector_offset, Inode *directory_inode) {
 	DirectoryEntry *directory_entries = NULL;
 	Inode temp_inode = { 0 };
 	int num_directories = 0;
 	int i = 0;
 
 	// Get the DirectoryEntries for this directory.
-	directory_entries = get_directory_entries(fp, superblock, directory_inode,
-			&num_directories);
+	directory_entries = get_directory_entries(fp, superblock,
+			partition_sector_offset, directory_inode, &num_directories);
 
 	// Print out the names of the DirectoryEntries.
 	for (i = 0; i < num_directories; i++) {
@@ -114,7 +119,8 @@ static void print_directory(FILE *fp, Superblock *superblock,
 			continue;
 		}
 
-		print_file(fp, superblock, directory_entries[i].inode_number,
+		print_file(fp, superblock, partition_sector_offset,
+				directory_entries[i].inode_number,
 				directory_entries[i].filename);
 	}
 
@@ -125,8 +131,9 @@ static void print_directory(FILE *fp, Superblock *superblock,
 /*
  * Recursive function. Bulk of the logic is here.
  */
-void find_file(FILE *fp, Superblock *superblock, char *requested_path,
-		char *current_path, int inode_number, bool verbose) {
+void find_file(FILE *fp, Superblock *superblock, int partition_sector_offset,
+		char *requested_path, char *current_path, int inode_number,
+		bool verbose) {
 	Inode inode = { 0 };
 	DirectoryEntry *directory_entries = NULL;
 	int num_directories = 0;
@@ -136,7 +143,7 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 	char requested_path_copy[60] = { '\0' };
 
 	// Get the inode for the inode_number given.
-	get_inode(&inode, fp, superblock, inode_number);
+	get_inode(&inode, fp, superblock, partition_sector_offset, inode_number);
 
 	// Base case: this is a FILE. In this case, you either found the
 	// file that was requested or you didn't.
@@ -149,7 +156,8 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			}
 
 			printf("%s:\n", requested_path);
-			print_file(fp, superblock, inode_number, requested_path);
+			print_file(fp, superblock, partition_sector_offset, inode_number,
+					requested_path);
 
 			return;
 		}
@@ -173,7 +181,7 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			}
 
 			printf("%s:\n", requested_path);
-			print_directory(fp, superblock, &inode);
+			print_directory(fp, superblock, partition_sector_offset, &inode);
 			return;
 		}
 		// Otherwise, traverse down this directory.
@@ -185,8 +193,8 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 			parsed_token = strtok(requested_path, "/");
 
 			// Grab each of the DirectoryEntries in this directtory.
-			directory_entries = get_directory_entries(fp, superblock, &inode,
-					&num_directories);
+			directory_entries = get_directory_entries(fp, superblock,
+					partition_sector_offset, &inode, &num_directories);
 
 			// Find the DirectoryEntry that points in the directory
 			// direction that we want to go.
@@ -206,7 +214,8 @@ void find_file(FILE *fp, Superblock *superblock, char *requested_path,
 					}
 
 					// Make a recursive call with the udpated path.
-					find_file(fp, superblock, requested_path_copy, new_path,
+					find_file(fp, superblock, partition_sector_offset,
+							requested_path_copy, new_path,
 							directory_entries[i].inode_number, verbose);
 
 					free(directory_entries);

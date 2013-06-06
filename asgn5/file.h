@@ -36,7 +36,8 @@ typedef struct {
 	unsigned char filename[FILENAME_LENGTH]; /* filename string */
 } DirectoryEntry;
 
-void find_file(FILE *fp, Superblock *superblock, char *requested_path,
-		char *current_path, int inode_number, bool verbose);
+void find_file(FILE *fp, Superblock *superblock, int partition_sector_offset,
+		char *requested_path, char *current_path, int inode_number,
+		bool verbose);
 
 #endif /* INODE_H_ */
