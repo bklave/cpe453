@@ -87,6 +87,7 @@ int main(int argc, char *argv[]) {
 	Superblock superblock = { 0 };
 	char *new_path = NULL;
 	int partition_sector_offset = 0;
+	int non_flag_arguments = argc - 1;
 
 	for (i = 1; i < argc; i++) {
 
@@ -101,11 +102,13 @@ int main(int argc, char *argv[]) {
 			case 'p':
 				use_partition = true;
 				primary_partition = strtol(argv[i + 1], NULL, 10);
+				non_flag_arguments -= 2;
 
 				// Check for Subpartition flag.
 				if ((argc > (i + 3)) && argv[i + 2][1] == 's') {
 					use_subpartition = true;
 					subpartition = strtol(argv[i + 3], NULL, 10);
+					non_flag_arguments -= 2;
 				}
 
 				break;
@@ -113,9 +116,34 @@ int main(int argc, char *argv[]) {
 		}
 	}
 
-	/* If there are three or more arguments and both the second to last
-	 * and last arguments aren't flags, then the user specified a path. */
-	if (argc > 2 && argv[argc - 2][0] != '-' && argv[argc - 1][0] != '-') {
+//	/* If there are three or more arguments and both the second to last
+//	 * and last arguments aren't flags, then the user specified a path. */
+//	if (argc >= 3 && argv[argc - 2][0] != '-' && argv[argc - 1][0] != '-') {
+//		image_filename = argv[argc - 2];
+//		path = argv[argc - 1];
+//
+//		/* "Paths that do not include a leading Ô/Õ are processed
+//		 * relative to the root directory" */
+//		if (path[0] != '/') {
+//			new_path = malloc(sizeof(char) * strlen(path) + 2);
+//			strcpy(new_path, "/");
+//			strcat(new_path, path);
+//			path = new_path;
+//		}
+//	}
+//	// Otherwise, the user didn't specify a path after all.
+//	else {
+//		image_filename = argv[argc - 1];
+//		path = "/";
+//	}
+
+	if (non_flag_arguments <= 0) {
+		print_minls_usage();
+		exit(-1);
+	} else if (non_flag_arguments == 1) {
+		image_filename = argv[argc - 1];
+		path = "/";
+	} else if (non_flag_arguments == 2) {
 		image_filename = argv[argc - 2];
 		path = argv[argc - 1];
 
@@ -127,11 +155,6 @@ int main(int argc, char *argv[]) {
 			strcat(new_path, path);
 			path = new_path;
 		}
-	}
-	// Otherwise, the user didn't specify a path after all.
-	else {
-		image_filename = argv[argc - 1];
-		path = "/";
 	}
 
 	printf("Opening file %s with path: %s\n", image_filename, path);
