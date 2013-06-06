@@ -14,20 +14,20 @@ static void print_inode(Inode *inode) {
 	int i = 0;
 
 	printf("File inode:\n");
-	printf("  unsigned short mode: 0x%x  (", inode->mode);
+	printf("  unsigned short mode 0x%x\t(", inode->mode);
 	print_permissions_string(inode->mode);
 	printf(")\n");
-	printf("  unsigned short links: %hu\n", inode->links);
-	printf("  unsigned short uid: %hu\n", inode->uid);
-	printf("  unsigned short gid: %hu\n", inode->gid);
+	printf("  unsigned short links %hu\n", inode->links);
+	printf("  unsigned short uid %hu\n", inode->uid);
+	printf("  unsigned short gid %hu\n", inode->gid);
 	printf("  unsigned long "
-			" size: %lu\n", (long unsigned int) inode->size);
+			" size %lu\n", (long unsigned int) inode->size);
 	printf("  unsigned long "
-			" atime: %lu\n", (long unsigned int) inode->atime);
+			" atime %lu\n", (long unsigned int) inode->atime);
 	printf("  unsigned long "
-			" mtime: %lu\n", (long unsigned int) inode->mtime);
+			" mtime %lu\n", (long unsigned int) inode->mtime);
 	printf("  unsigned long "
-			" ctime: %lu\n\n", (long unsigned int) inode->ctime);
+			" ctime %lu\n\n", (long unsigned int) inode->ctime);
 
 	printf("  Direct zones:\n");
 	for (i = 0; i < DIRECT_ZONES; i++) {
@@ -94,7 +94,7 @@ static void print_file(FILE *fp, Superblock *superblock,
 	print_permissions_string(temp_inode.mode);
 
 	// Print out the data for this DirectoryEntry.
-	printf(", %d, %s\n", temp_inode.size, filename);
+	printf(" %9d %s\n", temp_inode.size, filename);
 }
 
 static void print_directory(FILE *fp, Superblock *superblock,

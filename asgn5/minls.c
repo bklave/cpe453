@@ -35,9 +35,6 @@ static FILE *initalize(FILE *fp, Superblock *superblock,
 		// If you do find a partition table, then offset the superblock to
 		// point to its partitioned location.
 		if (partition_table_entry.type == MINIX_PARTITION_TYPE) {
-			printf("Parition table found; first sector at %d\n",
-					partition_table_entry.lFirst);
-
 			// There's a partition table, so account for the superblock
 			// offset for later.
 			*partition_sector_offset = partition_table_entry.lFirst
@@ -104,13 +101,11 @@ int main(int argc, char *argv[]) {
 			case 'p':
 				use_partition = true;
 				primary_partition = strtol(argv[i + 1], NULL, 10);
-				printf("Using partition: %d\n", primary_partition);
 
 				// Check for Subpartition flag.
 				if ((argc > (i + 3)) && argv[i + 2][1] == 's') {
 					use_subpartition = true;
 					subpartition = strtol(argv[i + 3], NULL, 10);
-					printf("Using subpartition: %d\n", subpartition);
 				}
 
 				break;
@@ -138,6 +133,8 @@ int main(int argc, char *argv[]) {
 		image_filename = argv[argc - 1];
 		path = "/";
 	}
+
+	printf("Opening file %s with path: %s\n", image_filename, path);
 
 	// Open and initalize the image. Initialize the superblock.
 	fp = initalize(fp, &superblock, &partition_sector_offset, image_filename,
